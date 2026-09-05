@@ -1,0 +1,21 @@
+{
+  "generator": "deterministic sympy; questions verbatim from OATutor",
+  "input": "oatutor_systems.jsonl",
+  "counts": {
+    "systems_emitted": 164,
+    "preference_pairs": 811,
+    "sft_method_examples": 811
+  },
+  "verified_by_method": {
+    "substitution": 105,
+    "elimination": 107,
+    "cramers_rule": 164,
+    "inverse_matrix": 164,
+    "gaussian_elimination": 164,
+    "graphing": 107
+  },
+  "rejections_and_skips": {
+    "skip_no_unique_solution": 27,
+    "skip_unparsed": 560
+  }
+}

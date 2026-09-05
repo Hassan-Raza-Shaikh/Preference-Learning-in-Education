@@ -67,3 +67,47 @@ Key conventions:
   schema is built to accept it.
 - **Mixed-method lessons.** For the generic two-/three-variable lessons the method is
   labelled `["mixed"]` — verify from solution text before treating as a hard label.
+
+---
+
+## Multi-method generation (`multimethod.py`)
+
+Generates, for OATutor problems that **state a linear system in text**, a verified
+solution by every applicable method, plus DPO preference pairs. Questions are taken
+**verbatim** from OATutor — only solutions are generated, and every solution is
+computed with sympy and checked by back-substitution. Nothing unverified is written.
+
+```bash
+python -m oatutor_extract.multimethod --systems data/oatutor_systems.jsonl --out-dir data
+python tests/verify_multimethod.py          # independent 3-way re-verification
+```
+
+### Outputs (`data/multimethod/`)
+| File | What |
+|---|---|
+| `systems_multimethod.jsonl` | One system + all verified methods (164 systems). |
+| `sft_multimethod.jsonl` | One `{prompt, completion}` per verified method (811). |
+| `preference_pairs.jsonl` | DPO `{prompt, chosen, rejected, meta}` (811). |
+| `manifest.json` | Per-method verification counts and skip reasons. |
+
+### Methods
+`substitution`, `elimination`, `graphing` (2-var); `cramers_rule`, `inverse_matrix`,
+`gaussian_elimination` (2- and 3-var). Each system gets every applicable method.
+
+### Correctness guarantees (why it can't hallucinate)
+- Equations parsed from the real question → sympy `linsolve`.
+- Each method's steps are computed from actual intermediate values (not free text).
+- Each final answer is verified (i) == reference solution and (ii) satisfies every
+  original equation. `tests/verify_multimethod.py` re-derives everything independently
+  (three solvers: sympy linsolve, sympy solve, numpy float) and checks provenance
+  against the original OATutor question. Latest run: **2,925 assertions, 0 failures.**
+- DPO `rejected` = a realistic student-error perturbation (sign flip / swap / off-by-one),
+  **verified not to satisfy the system**. Independent judge separates chosen from
+  rejected 811/811 (100%), with chosen/rejected near-equal length (no length artifact).
+
+### Scope / honesty
+- Covers the 164 systems (of 751) that state a parseable, uniquely-solvable linear
+  system in text. Skipped: figure-only systems (equations in images), matrix-operation
+  tasks, word problems, and singular/inconsistent systems (27).
+- These are *verified* multi-method solutions — the trustworthy core to build on before
+  any broader (and necessarily less certain) generation.
