@@ -1,0 +1,10 @@
+# Source content clone (large; fetch with git clone as needed)
+OATutor-Content/
+
+# Generated dataset artifacts (large; regenerate with the extractor)
+data/**/*.jsonl
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/

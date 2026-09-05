@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-09-05T04:57:51.474367+00:00",
+  "source_repo": "CAHLR/OATutor-Content",
+  "source_commit": "2f27a597268ae5d1826f69083ad91cf8864a0c05",
+  "counts": {
+    "problem_folders": 13287,
+    "problems_extracted": 13287,
+    "quarantined": 0,
+    "duplicates": 2526,
+    "unique_after_dedup": 10761,
+    "systems_records": 751,
+    "sft_step_examples": 14196
+  },
+  "quality_flag_histogram": {
+    "figure_dependent": 516,
+    "empty_tutoring": 267,
+    "unordered_dependencies": 50,
+    "empty_question": 46,
+    "empty_problem_stem": 4,
+    "figure_missing": 3
+  },
+  "by_method_counts": {
+    "unspecified": 10042,
+    "mixed": 343,
+    "cramers_rule": 90,
+    "matrices": 83,
+    "graphing": 60,
+    "inverse_matrix": 51,
+    "gaussian_elimination": 48,
+    "elimination": 24,
+    "substitution": 20
+  },
+  "by_step_count": {
+    "1_step": 667,
+    "2_step": 47,
+    "3_step": 5
+  },
+  "outputs": {
+    "canonical": "oatutor.jsonl",
+    "systems": "oatutor_systems.jsonl",
+    "sft": "sft_steps.jsonl",
+    "by_method_dir": "by_method/",
+    "by_step_count_dir": "by_step_count/",
+    "duplicates": "duplicates.json",
+    "quarantine": "quarantine.json"
+  }
+}
