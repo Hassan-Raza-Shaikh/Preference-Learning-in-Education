@@ -98,19 +98,36 @@ already do.
 
 ---
 
-## 5. Scaling verified data  *(in progress)*
+## 5. Scaling verified data
 
 Synthetic systems (built from known solutions, run through the same verified worked
 generators, independently re-checked: 1,200 systems / 5,624 method-solutions, 0 failures)
-are combined with the real worked train set → **6,189 SFT examples** (0 contamination with
-the held-out set). SFT re-run for both models; evaluation on the same 26 real test systems.
+were combined with the real worked train set → **6,189 SFT examples** (0 contamination with
+the held-out set). SFT re-run for both models (1500 iters); evaluation on the same 26 real
+test systems.
 
-| model | worked SFT (114 sys) | worked SFT (scaled, 6,189 ex) |
-|---|---|---|
-| general | 0.159 | _pending_ |
-| math | 0.286 | _pending_ |
+| model | base | worked SFT (114 sys, 600 it) | scaled SFT (6,189 ex, 1500 it) |
+|---|---|---|---|
+| general | 0.389 | 0.159 | **0.095** |
+| math | 0.381 | 0.286 | **0.270** |
 
-_(table updated when the run completes)_
+**Finding: naive scaling did not help.** The math model was flat (0.286→0.270, within
+noise); the general model regressed. So *more verified data alone did not improve accuracy.*
+
+Two caveats, established by inspection (this is where honest analysis matters):
+1. **Not a difficulty effect.** The synthetic systems are not harder — similar coefficient
+   sizes (max-coef 5.4 vs 6.0) — but they are **0% fractional-solution vs 37% in real data**,
+   a solution-distribution mismatch.
+2. **An iteration confound.** The scaled run used 1500 iters vs the worked-114 run's 600.
+   For the fragile general model, *more SFT steps on this task = more reasoning-suppression*,
+   so its regression conflates "more data" with "more steps." A compute-matched control
+   (worked-114 at 1500 iters) is needed to isolate the data-volume effect; the math model,
+   being flat, is less sensitive to this confound.
+
+**Takeaway.** For these small models, **data distribution and training budget matter more
+than raw volume.** The path to gains is distribution-matched synthetic data (include
+fractional-solution systems; match coefficient statistics) and careful early-stopping —
+not simply more examples.
 
 ---
 

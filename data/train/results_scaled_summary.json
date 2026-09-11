@@ -1,0 +1,169 @@
+{
+  "general_base": {
+    "n": 126,
+    "answer_accuracy": 0.3889,
+    "method_faithfulness": 1.0,
+    "error_modes": {
+      "correct": 49,
+      "wrong_answer": 70,
+      "no_answer": 7
+    },
+    "per_method": {
+      "cramers_rule": {
+        "n": 26,
+        "acc": 0.385,
+        "faithful": 1.0
+      },
+      "elimination": {
+        "n": 16,
+        "acc": 0.562,
+        "faithful": 1.0
+      },
+      "gaussian_elimination": {
+        "n": 26,
+        "acc": 0.038,
+        "faithful": 1.0
+      },
+      "graphing": {
+        "n": 16,
+        "acc": 0.25,
+        "faithful": 1.0
+      },
+      "inverse_matrix": {
+        "n": 26,
+        "acc": 0.385,
+        "faithful": 1.0
+      },
+      "substitution": {
+        "n": 16,
+        "acc": 0.938,
+        "faithful": 1.0
+      }
+    }
+  },
+  "scaled_general_sft": {
+    "n": 126,
+    "answer_accuracy": 0.0952,
+    "method_faithfulness": 1.0,
+    "error_modes": {
+      "wrong_answer": 112,
+      "correct": 12,
+      "no_answer": 2
+    },
+    "per_method": {
+      "cramers_rule": {
+        "n": 26,
+        "acc": 0.0,
+        "faithful": 1.0
+      },
+      "elimination": {
+        "n": 16,
+        "acc": 0.438,
+        "faithful": 1.0
+      },
+      "gaussian_elimination": {
+        "n": 26,
+        "acc": 0.038,
+        "faithful": 1.0
+      },
+      "graphing": {
+        "n": 16,
+        "acc": 0.0,
+        "faithful": 1.0
+      },
+      "inverse_matrix": {
+        "n": 26,
+        "acc": 0.038,
+        "faithful": 1.0
+      },
+      "substitution": {
+        "n": 16,
+        "acc": 0.188,
+        "faithful": 1.0
+      }
+    }
+  },
+  "math_base": {
+    "n": 126,
+    "answer_accuracy": 0.381,
+    "method_faithfulness": 0.9841,
+    "error_modes": {
+      "correct": 48,
+      "wrong_answer": 78
+    },
+    "per_method": {
+      "cramers_rule": {
+        "n": 26,
+        "acc": 0.0,
+        "faithful": 1.0
+      },
+      "elimination": {
+        "n": 16,
+        "acc": 0.75,
+        "faithful": 1.0
+      },
+      "gaussian_elimination": {
+        "n": 26,
+        "acc": 0.423,
+        "faithful": 0.923
+      },
+      "graphing": {
+        "n": 16,
+        "acc": 0.062,
+        "faithful": 1.0
+      },
+      "inverse_matrix": {
+        "n": 26,
+        "acc": 0.385,
+        "faithful": 1.0
+      },
+      "substitution": {
+        "n": 16,
+        "acc": 0.875,
+        "faithful": 1.0
+      }
+    }
+  },
+  "scaled_math_sft": {
+    "n": 126,
+    "answer_accuracy": 0.2698,
+    "method_faithfulness": 1.0,
+    "error_modes": {
+      "correct": 34,
+      "wrong_answer": 90,
+      "no_answer": 2
+    },
+    "per_method": {
+      "cramers_rule": {
+        "n": 26,
+        "acc": 0.192,
+        "faithful": 1.0
+      },
+      "elimination": {
+        "n": 16,
+        "acc": 0.75,
+        "faithful": 1.0
+      },
+      "gaussian_elimination": {
+        "n": 26,
+        "acc": 0.231,
+        "faithful": 1.0
+      },
+      "graphing": {
+        "n": 16,
+        "acc": 0.062,
+        "faithful": 1.0
+      },
+      "inverse_matrix": {
+        "n": 26,
+        "acc": 0.077,
+        "faithful": 1.0
+      },
+      "substitution": {
+        "n": 16,
+        "acc": 0.5,
+        "faithful": 1.0
+      }
+    }
+  }
+}
