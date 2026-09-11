@@ -70,10 +70,15 @@ def main():
             out[split_of[keyfn(it)]].append(it)
         return out
 
+    # trainer (mlx-lm / mlx-lm-lora) reads {train,valid,test}.jsonl from a --data dir
+    sft_dir = os.path.join(OUT, "sft"); os.makedirs(sft_dir, exist_ok=True)
+    dpo_dir = os.path.join(OUT, "dpo"); os.makedirs(dpo_dir, exist_ok=True)
+    DIRNAME = {"train": "train", "valid": "valid", "test": "test"}
+
     # ---- SFT (MLX chat format) ----
     sft_by = bucket(sft, lambda e: e["meta"]["problem_id"])
     for split, items in sft_by.items():
-        with open(os.path.join(OUT, f"sft_{split}.jsonl"), "w", encoding="utf-8") as fh:
+        with open(os.path.join(sft_dir, f"{DIRNAME[split]}.jsonl"), "w", encoding="utf-8") as fh:
             for e in items:
                 method = e["meta"]["method"]
                 block = system_block_from_prompt(e["prompt"])
@@ -84,17 +89,16 @@ def main():
                     {"role": "assistant", "content": e["completion"]},
                 ]}, ensure_ascii=False) + "\n")
 
-    # ---- DPO ----
+    # ---- DPO (prompt/chosen/rejected only; no extra keys for the trainer) ----
     pref_by = bucket(pref, lambda p: p["meta"]["problem_id"])
     for split, items in pref_by.items():
-        with open(os.path.join(OUT, f"dpo_{split}.jsonl"), "w", encoding="utf-8") as fh:
+        with open(os.path.join(dpo_dir, f"{DIRNAME[split]}.jsonl"), "w", encoding="utf-8") as fh:
             for p in items:
                 method = p["meta"]["method"]
                 block = system_block_from_prompt(p["prompt"])
                 user = build_prompt(method, block)
                 fh.write(json.dumps({
                     "prompt": user, "chosen": p["chosen"], "rejected": p["rejected"],
-                    "meta": p["meta"],
                 }, ensure_ascii=False) + "\n")
 
     # ---- held-out test systems (for eval: prompt the model per method) ----

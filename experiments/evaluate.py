@@ -41,11 +41,15 @@ SIGNATURE = {
 
 
 def parse_answer(text):
-    """Prefer the final 'Solution:' line; else take last value seen per variable."""
+    """Extract the model's stated final answer.
+
+    Scans the whole text and keeps the LAST value stated for each variable
+    (the final answer, after any intermediate lines). Robust to the many
+    formats models use: `x=3`, `x = 3`, `\\(x = 3\\)`, `\\[x = 3\\]`,
+    `$$x=3, y=1$$`, and values on separate lines.
+    """
     out = {}
-    lines = [l for l in text.splitlines() if "solution" in l.lower()]
-    scan = lines[-1] if lines else text
-    for var, val in ANS.findall(scan):
+    for var, val in ANS.findall(text):
         m = re.match(r'(-?)\\frac\{(-?\d+)\}\{(-?\d+)\}', val)
         if m:
             sign = -1 if m.group(1) == '-' else 1
@@ -134,7 +138,7 @@ def selftest():
     """Feed the gold completions from sft_test back through the grader."""
     sysmap = load_systems()
     gens = []
-    for line in open(os.path.join(ROOT, "data", "train", "sft_test.jsonl"), encoding="utf-8"):
+    for line in open(os.path.join(ROOT, "data", "train", "sft", "test.jsonl"), encoding="utf-8"):
         msgs = json.loads(line)["messages"]
         user = next(m["content"] for m in msgs if m["role"] == "user")
         gold = next(m["content"] for m in msgs if m["role"] == "assistant")
