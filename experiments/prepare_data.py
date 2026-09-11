@@ -17,8 +17,6 @@ import random
 from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MM = os.path.join(ROOT, "data", "multimethod")
-OUT = os.path.join(ROOT, "data", "train")
 SEED = 20260909
 SPLIT = (0.70, 0.15, 0.15)   # train / valid / test, by SYSTEM
 
@@ -47,6 +45,15 @@ def system_block_from_prompt(sft_prompt):
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--mm-dir", default=os.path.join(ROOT, "data", "multimethod"),
+                    help="directory with sft_multimethod.jsonl / preference_pairs.jsonl / systems_multimethod.jsonl")
+    ap.add_argument("--out", default=os.path.join(ROOT, "data", "train"),
+                    help="output directory for splits")
+    args = ap.parse_args()
+    MM, OUT = args.mm_dir, args.out
+
     os.makedirs(OUT, exist_ok=True)
     sft = [json.loads(l) for l in open(os.path.join(MM, "sft_multimethod.jsonl"), encoding="utf-8")]
     pref = [json.loads(l) for l in open(os.path.join(MM, "preference_pairs.jsonl"), encoding="utf-8")]

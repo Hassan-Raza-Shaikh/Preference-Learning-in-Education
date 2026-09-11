@@ -32,11 +32,15 @@ MODELS = {
     "math": "mlx-community/Qwen2.5-Math-1.5B-Instruct-4bit",
 }
 
-SFT_ARGS = ["--train-mode", "sft", "--train-type", "lora", "--data", "data/train/sft",
+def sft_args(data_dir):
+    return ["--train-mode", "sft", "--train-type", "lora", "--data", os.path.join(data_dir, "sft"),
             "--iters", "600", "--batch-size", "2", "--num-layers", "8",
             "--learning-rate", "1e-4", "--max-seq-length", "1024",
             "--steps-per-report", "25", "--fuse"]
-DPO_ARGS = ["--train-mode", "dpo", "--train-type", "lora", "--data", "data/train/dpo",
+
+
+def dpo_args(data_dir):
+    return ["--train-mode", "dpo", "--train-type", "lora", "--data", os.path.join(data_dir, "dpo"),
             "--iters", "400", "--batch-size", "1", "--num-layers", "8",
             "--learning-rate", "5e-5", "--beta", "0.1", "--max-seq-length", "1024",
             "--steps-per-report", "25", "--fuse"]
@@ -85,39 +89,44 @@ def evaluate(gen_jsonl, eval_json):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", choices=list(MODELS), help="run just one base model")
+    ap.add_argument("--data-dir", default=os.path.join(ROOT, "data", "train"),
+                    help="dir containing sft/ and dpo/ subdirs")
+    ap.add_argument("--tag", default="", help="prefix for eval/gen/model artifacts, e.g. 'worked_'")
     args = ap.parse_args()
     os.makedirs(MODELS_DIR, exist_ok=True)
     targets = [args.only] if args.only else list(MODELS)
+    tag = args.tag
+    SFT_ARGS, DPO_ARGS = sft_args(args.data_dir), dpo_args(args.data_dir)
     results = {}
 
     for name in targets:
         base = MODELS[name]
-        log(f"===== MODEL: {name} ({base}) =====")
+        log(f"===== MODEL: {tag}{name} ({base}) =====")
 
-        # --- base ---
+        # --- base ---  (0-shot; independent of training data, so no tag)
         gen = os.path.join(EVAL_DIR, f"gen_{name}_base.jsonl")
         ev = os.path.join(EVAL_DIR, f"eval_{name}_base.json")
         generate(base, gen)
         results[f"{name}_base"] = evaluate(gen, ev)
 
         # --- SFT ---
-        sft_dir = os.path.join(MODELS_DIR, f"{name}_sft")
+        sft_dir = os.path.join(MODELS_DIR, f"{tag}{name}_sft")
         train(base, SFT_ARGS, sft_dir)
-        gen = os.path.join(EVAL_DIR, f"gen_{name}_sft.jsonl")
-        ev = os.path.join(EVAL_DIR, f"eval_{name}_sft.json")
+        gen = os.path.join(EVAL_DIR, f"gen_{tag}{name}_sft.jsonl")
+        ev = os.path.join(EVAL_DIR, f"eval_{tag}{name}_sft.json")
         generate(sft_dir, gen)
-        results[f"{name}_sft"] = evaluate(gen, ev)
+        results[f"{tag}{name}_sft"] = evaluate(gen, ev)
 
         # --- DPO (on top of SFT) ---
-        dpo_dir = os.path.join(MODELS_DIR, f"{name}_dpo")
+        dpo_dir = os.path.join(MODELS_DIR, f"{tag}{name}_dpo")
         train(sft_dir, DPO_ARGS, dpo_dir)
-        gen = os.path.join(EVAL_DIR, f"gen_{name}_dpo.jsonl")
-        ev = os.path.join(EVAL_DIR, f"eval_{name}_dpo.json")
+        gen = os.path.join(EVAL_DIR, f"gen_{tag}{name}_dpo.jsonl")
+        ev = os.path.join(EVAL_DIR, f"eval_{tag}{name}_dpo.json")
         generate(dpo_dir, gen)
-        results[f"{name}_dpo"] = evaluate(gen, ev)
+        results[f"{tag}{name}_dpo"] = evaluate(gen, ev)
 
     # --- results table ---
-    summary = os.path.join(EVAL_DIR, "results_summary.json")
+    summary = os.path.join(EVAL_DIR, f"results_{tag or 'terse'}summary.json")
     json.dump(results, open(summary, "w"), indent=2)
     log("===== RESULTS (answer accuracy / method faithfulness) =====")
     hdr = f"{'state':16s} {'acc':>8s} {'faithful':>9s}  error_modes"
