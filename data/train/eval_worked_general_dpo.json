@@ -1,0 +1,41 @@
+{
+  "n": 126,
+  "answer_accuracy": 0.0,
+  "method_faithfulness": 1.0,
+  "error_modes": {
+    "wrong_answer": 81,
+    "no_answer": 45
+  },
+  "per_method": {
+    "cramers_rule": {
+      "n": 26,
+      "acc": 0.0,
+      "faithful": 1.0
+    },
+    "elimination": {
+      "n": 16,
+      "acc": 0.0,
+      "faithful": 1.0
+    },
+    "gaussian_elimination": {
+      "n": 26,
+      "acc": 0.0,
+      "faithful": 1.0
+    },
+    "graphing": {
+      "n": 16,
+      "acc": 0.0,
+      "faithful": 1.0
+    },
+    "inverse_matrix": {
+      "n": 26,
+      "acc": 0.0,
+      "faithful": 1.0
+    },
+    "substitution": {
+      "n": 16,
+      "acc": 0.0,
+      "faithful": 1.0
+    }
+  }
+}
