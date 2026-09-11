@@ -32,11 +32,11 @@ MODELS = {
     "math": "mlx-community/Qwen2.5-Math-1.5B-Instruct-4bit",
 }
 
-def sft_args(data_dir):
+def sft_args(data_dir, iters=600):
     return ["--train-mode", "sft", "--train-type", "lora", "--data", os.path.join(data_dir, "sft"),
-            "--iters", "600", "--batch-size", "2", "--num-layers", "8",
+            "--iters", str(iters), "--batch-size", "2", "--num-layers", "8",
             "--learning-rate", "1e-4", "--max-seq-length", "1024",
-            "--steps-per-report", "25", "--fuse"]
+            "--steps-per-report", "50", "--fuse"]
 
 
 def dpo_args(data_dir):
@@ -92,11 +92,13 @@ def main():
     ap.add_argument("--data-dir", default=os.path.join(ROOT, "data", "train"),
                     help="dir containing sft/ and dpo/ subdirs")
     ap.add_argument("--tag", default="", help="prefix for eval/gen/model artifacts, e.g. 'worked_'")
+    ap.add_argument("--no-dpo", action="store_true", help="run base+SFT only (skip DPO)")
+    ap.add_argument("--sft-iters", type=int, default=600)
     args = ap.parse_args()
     os.makedirs(MODELS_DIR, exist_ok=True)
     targets = [args.only] if args.only else list(MODELS)
     tag = args.tag
-    SFT_ARGS, DPO_ARGS = sft_args(args.data_dir), dpo_args(args.data_dir)
+    SFT_ARGS, DPO_ARGS = sft_args(args.data_dir, args.sft_iters), dpo_args(args.data_dir)
     results = {}
 
     for name in targets:
@@ -118,6 +120,8 @@ def main():
         results[f"{tag}{name}_sft"] = evaluate(gen, ev)
 
         # --- DPO (on top of SFT) ---
+        if args.no_dpo:
+            continue
         dpo_dir = os.path.join(MODELS_DIR, f"{tag}{name}_dpo")
         train(sft_dir, DPO_ARGS, dpo_dir)
         gen = os.path.join(EVAL_DIR, f"gen_{tag}{name}_dpo.jsonl")
