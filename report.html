@@ -1,0 +1,452 @@
+<title>Format Over Correctness</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#F6F7F9; --surface:#FFFFFF; --surface-2:#EEF1F5;
+    --ink:#161A20; --muted:#5A6472; --line:#DBE0E7; --grid:#E7EBF0;
+    --accent:#3A5BA0; --good:#2E7D5B; --bad:#C1453B; --warn:#B4791F;
+    --gbar:#3A5BA0; --mbar:#C56A3A;
+    --serif:"Spectral",Georgia,serif;
+    --sans:"IBM Plex Sans",system-ui,sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#12151A; --surface:#191D24; --surface-2:#20252D;
+      --ink:#E8ECF1; --muted:#9AA5B2; --line:#2A313A; --grid:#242B34;
+      --accent:#7E9BE0; --good:#5FB98E; --bad:#E07A72; --warn:#D6A94A;
+      --gbar:#7E9BE0; --mbar:#E0925E;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#12151A; --surface:#191D24; --surface-2:#20252D;
+    --ink:#E8ECF1; --muted:#9AA5B2; --line:#2A313A; --grid:#242B34;
+    --accent:#7E9BE0; --good:#5FB98E; --bad:#E07A72; --warn:#D6A94A;
+    --gbar:#7E9BE0; --mbar:#E0925E;
+  }
+
+  *{box-sizing:border-box}
+  body{background:var(--bg); color:var(--ink); font-family:var(--sans);
+       line-height:1.6; margin:0; -webkit-font-smoothing:antialiased}
+  .wrap{max-width:760px; margin:0 auto; padding-block:56px; padding-inline:20px}
+  h1,h2,h3{font-family:var(--serif); text-wrap:balance; line-height:1.15; margin:0}
+  p{margin:0}
+  a{color:var(--accent)}
+  .stack{display:flex; flex-direction:column}
+
+  /* ---- masthead ---- */
+  .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+           color:var(--accent); margin-bottom:18px}
+  h1{font-size:clamp(38px,7vw,60px); font-weight:700; letter-spacing:-.01em}
+  .dek{font-family:var(--serif); font-weight:500; font-size:clamp(18px,2.4vw,22px);
+       color:var(--muted); margin-top:14px; max-width:60ch}
+  .meta{display:flex; flex-wrap:wrap; gap:8px 20px; margin-top:22px; padding-top:18px;
+        border-top:1px solid var(--line); font-family:var(--mono); font-size:12.5px; color:var(--muted)}
+  .meta b{color:var(--ink); font-weight:500}
+
+  /* ---- abstract ---- */
+  .abstract{background:var(--surface); border:1px solid var(--line); border-left:3px solid var(--accent);
+            border-radius:4px; padding:22px 24px; margin-top:34px}
+  .abstract p+p{margin-top:12px}
+
+  section{margin-top:56px}
+  .sec-head{display:flex; align-items:baseline; gap:14px; margin-bottom:20px}
+  .sec-num{font-family:var(--mono); font-size:14px; color:var(--accent); font-weight:500;
+           border:1px solid var(--line); border-radius:4px; padding:2px 8px; flex:none}
+  h2{font-size:clamp(24px,3.6vw,30px); font-weight:600; letter-spacing:-.01em}
+  h3{font-size:18px; font-weight:600; margin-top:28px}
+  section p{margin-top:14px; max-width:66ch}
+  .lead{font-size:17px}
+
+  /* ---- findings ---- */
+  .findings{display:grid; gap:14px; margin-top:8px}
+  .finding{background:var(--surface); border:1px solid var(--line); border-radius:6px;
+           padding:18px 20px; display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:start}
+  .finding .k{font-family:var(--serif); font-size:30px; font-weight:700; color:var(--accent);
+              line-height:1; font-variant-numeric:tabular-nums}
+  .finding h3{margin:0 0 4px; font-size:16px}
+  .finding p{margin:0; font-size:14.5px; color:var(--muted); max-width:none}
+
+  /* ---- tables ---- */
+  .twrap{overflow-x:auto; margin-top:22px; border:1px solid var(--line); border-radius:6px}
+  table{border-collapse:collapse; width:100%; font-size:14px}
+  caption{caption-side:bottom; text-align:left; color:var(--muted); font-size:12.5px;
+          padding:10px 14px; font-family:var(--mono)}
+  th,td{padding:9px 14px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap}
+  th:first-child,td:first-child{text-align:left}
+  thead th{background:var(--surface-2); font-weight:600; font-size:12px; letter-spacing:.03em;
+           text-transform:uppercase; color:var(--muted)}
+  tbody tr:last-child td{border-bottom:none}
+  td.num,th.num{font-family:var(--mono); font-variant-numeric:tabular-nums}
+  .rowlab{font-weight:500}
+  .best{color:var(--good); font-weight:500}
+  .worst{color:var(--bad)}
+  .up::before{content:"▲ "; color:var(--good); font-size:10px}
+  .down::before{content:"▼ "; color:var(--bad); font-size:10px}
+  .flat{color:var(--muted)}
+
+  /* ---- figure ---- */
+  figure{margin:26px 0 0}
+  .chart{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:20px 18px 12px}
+  figcaption{color:var(--muted); font-size:12.5px; margin-top:10px; font-family:var(--mono)}
+  .tick{fill:var(--muted); font-family:var(--mono); font-size:11px}
+  .val{fill:var(--ink); font-family:var(--mono); font-size:10.5px; font-weight:500}
+  .glab{fill:var(--muted); font-family:var(--sans); font-size:12px}
+  .leg{fill:var(--ink); font-family:var(--sans); font-size:12px; dominant-baseline:middle}
+  .gbar{fill:var(--gbar)} .mbar{fill:var(--mbar)}
+
+  /* ---- inline bar cells (per-method) ---- */
+  .mbarcell{position:relative; min-width:120px}
+  .mtrack{display:block; height:16px; background:var(--surface-2); border-radius:3px; overflow:hidden}
+  .mfill{display:block; height:100%; border-radius:3px}
+
+  /* ---- mechanism / code ---- */
+  .mech{display:grid; gap:12px; margin-top:22px}
+  @media(min-width:640px){ .mech{grid-template-columns:1fr 1fr} }
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:6px; padding:16px 18px}
+  .card.good{border-top:3px solid var(--good)}
+  .card.bad{border-top:3px solid var(--bad)}
+  .card h3{margin:0 0 10px; font-size:13px; font-family:var(--mono); text-transform:uppercase;
+           letter-spacing:.06em; color:var(--muted)}
+  .eq{font-family:var(--mono); font-size:13px; line-height:1.9; color:var(--ink)}
+  .eq .wrong{color:var(--bad); font-weight:500}
+  .eq .right{color:var(--good); font-weight:500}
+  .callout{background:var(--surface-2); border-radius:6px; padding:16px 20px; margin-top:20px;
+           border-left:3px solid var(--warn)}
+  .callout p{margin:0; font-size:14.5px}
+  .callout strong{color:var(--ink)}
+
+  ul.clean{margin:14px 0 0; padding-left:0; list-style:none; display:grid; gap:10px}
+  ul.clean li{padding-left:22px; position:relative; font-size:15px; max-width:64ch}
+  ul.clean li::before{content:"—"; position:absolute; left:0; color:var(--accent)}
+
+  hr.rule{border:none; border-top:1px solid var(--line); margin:56px 0 0}
+  footer{margin-top:40px; color:var(--muted); font-family:var(--mono); font-size:12px}
+  footer a{color:var(--muted)}
+  .pill{display:inline-block; font-family:var(--mono); font-size:11px; padding:2px 7px;
+        border:1px solid var(--line); border-radius:999px; color:var(--muted)}
+</style>
+
+<div class="wrap">
+
+  <!-- MASTHEAD -->
+  <header>
+    <div class="eyebrow">Preference Learning in Education · Study Report</div>
+    <h1>Format Over Correctness</h1>
+    <p class="dek">Teaching small language models to solve systems of equations by a
+      specified method — and what a fully verified, sympy-graded pipeline reveals about
+      training data, format, and preference tuning.</p>
+    <div class="meta">
+      <span><b>Source</b> CAHLR/OATutor-Content</span>
+      <span><b>Models</b> Qwen2.5-1.5B (general · math)</span>
+      <span><b>Grading</b> sympy exact-answer</span>
+      <span><b>Hallucinated math</b> 0</span>
+    </div>
+  </header>
+
+  <div class="abstract">
+    <p><b>The question.</b> When a small LLM is trained to solve a linear system by a
+      <em>named</em> method (substitution, elimination, Cramer's rule, …), what actually
+      moves the needle — the base model's prior, the <em>format</em> of the solution
+      targets, or the training stage (SFT vs. DPO)? And does simply adding more verified
+      data help?</p>
+    <p><b>The short answer.</b> For 1.5B models, <em>how</em> a correct solution is written
+      matters more than the fact that it is correct: worked targets that show the arithmetic
+      beat terse ones at every turn. SFT beats DPO decisively. And naive data scaling did
+      not help — distribution and training budget matter more than volume. Every number
+      below is graded exactly by a symbolic checker; every training target was independently
+      re-verified.</p>
+  </div>
+
+  <!-- KEY FINDINGS -->
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>Headline findings</h2></div>
+    <div class="findings">
+      <div class="finding">
+        <div class="k">+8pt</div>
+        <div><h3>Format beats correctness of the target</h3>
+          <p>Switching terse solutions for worked ones (same math, arithmetic shown) lifted
+             SFT accuracy for both models — general 0.087 → 0.159, math 0.214 → 0.286 —
+             the single largest controllable lever in the study.</p></div>
+      </div>
+      <div class="finding">
+        <div class="k">SFT ≫ DPO</div>
+        <div><h3>Preference tuning hurt at this scale</h3>
+          <p>Every DPO run scored below its own SFT starting point, collapsing the general
+             model to near-zero — despite preference pairs a rule-based judge separates
+             perfectly. A capacity boundary, not a data flaw.</p></div>
+      </div>
+      <div class="finding">
+        <div class="k">7× ⇏</div>
+        <div><h3>More data did not mean better</h3>
+          <p>Growing the training set 7× with verified synthetic systems left the math model
+             flat and the general model worse. Data <em>distribution</em> and training budget
+             dominated raw volume.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DATA SOURCE -->
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>The data source</h2></div>
+    <p class="lead">OATutor-Content is a tutoring content pool, not a plain answer key. Each
+      problem decomposes into steps, and each step carries an ordered tree of hints and
+      interactive scaffolds — a scaffolded worked solution.</p>
+    <div class="twrap">
+      <table>
+        <caption>OATutor-Content, measured from a full clone (52,153 files).</caption>
+        <thead><tr><th>Quantity</th><th class="num">Count</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td class="rowlab">Problems</td><td class="num">13,287</td><td>across 21 courses</td></tr>
+          <tr><td class="rowlab">Steps</td><td class="num">17,761</td><td>every one has a stored answer</td></tr>
+          <tr><td class="rowlab">Hints</td><td class="num">46,384</td><td>expository steps</td></tr>
+          <tr><td class="rowlab">Scaffolds</td><td class="num">22,972</td><td>interactive sub-questions</td></tr>
+          <tr><td class="rowlab">Figures</td><td class="num">2,364</td><td>inline <span class="pill">##figure.gif##</span></td></tr>
+          <tr><td class="rowlab">Duplicate problems</td><td class="num">~4,715</td><td>~35%, mostly cross-course reuse</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Integrity was unusually high: zero steps missing answers, zero missing tutoring files,
+      zero duplicate IDs. The systems-of-equations slice — the focus of this study — holds
+      <b>751 problems</b>, of which <b>164</b> state a parseable, uniquely-solvable linear
+      system in text.</p>
+  </section>
+
+  <!-- DATASET CONSTRUCTION -->
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>Building verified targets</h2></div>
+    <p class="lead">Questions are taken verbatim from OATutor; only <em>solutions</em> are
+      generated — by sympy, not by a language model — so no fabricated arithmetic can enter
+      the data. For each system we produce a solution by every applicable method and verify
+      each one by substituting the answer back into the original equations.</p>
+    <div class="twrap">
+      <table>
+        <caption>Every figure below was independently re-verified — 0 failures.</caption>
+        <thead><tr><th>Dataset</th><th class="num">Systems</th><th class="num">Solutions</th><th class="num">Pairs</th><th>Verified</th></tr></thead>
+        <tbody>
+          <tr><td class="rowlab">Real (terse)</td><td class="num">164</td><td class="num">811</td><td class="num">811</td><td class="best">✓ 2,925 checks</td></tr>
+          <tr><td class="rowlab">Real (worked)</td><td class="num">164</td><td class="num">811</td><td class="num">811</td><td class="best">✓ 0 fail</td></tr>
+          <tr><td class="rowlab">Synthetic (worked)</td><td class="num">1,200</td><td class="num">5,624</td><td class="num">5,624</td><td class="best">✓ 0 fail</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Methods covered: substitution, elimination, graphing (two-variable); Cramer's rule,
+      matrix inverse, Gaussian elimination (two- and three-variable). Preference pairs set a
+      verified-correct solution (<span class="best">chosen</span>) against a
+      deterministically-corrupted, verified-wrong one (<span class="worst">rejected</span>).</p>
+  </section>
+
+  <!-- SETUP -->
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>Experimental setup</h2></div>
+    <ul class="clean">
+      <li><b>Split by system</b> — 164 → 114 train / 24 valid / <b>26 test</b> (126 method-solutions), no leakage, identical across every condition.</li>
+      <li><b>Two matched bases</b> — Qwen2.5-1.5B-Instruct (general) and Qwen2.5-Math-1.5B-Instruct (math), both 4-bit, run on Apple Silicon via MLX.</li>
+      <li><b>Training</b> — LoRA (8 layers) with mlx-lm-lora; SFT then DPO (β = 0.1).</li>
+      <li><b>Metric</b> — exact answer accuracy on held-out systems, graded by sympy. Method-faithfulness and error modes logged alongside.</li>
+    </ul>
+    <div class="callout"><p><strong>Why this is clean:</strong> a symbolic grader means there
+      is no LLM-judge noise, and the two bases start at nearly the same overall accuracy
+      (0.389 vs 0.381), so differences in how they respond to training are attributable to
+      the pretraining prior — not the starting point.</p></div>
+  </section>
+
+  <!-- RESULTS CHART -->
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>Results at a glance</h2></div>
+    <p class="lead">Overall answer accuracy on the 26 held-out real systems, across every
+      condition. The dashed line marks the untrained baseline both models share.</p>
+    <figure>
+      <div class="chart">
+<svg viewBox="0 0 760 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Overall accuracy by condition and model" style="width:100%;height:auto">
+<line x1="54" y1="308.0" x2="746" y2="308.0" stroke="var(--grid)" stroke-width="1"/>
+<text x="46" y="312.0" text-anchor="end" class="tick">0.0</text>
+<line x1="54" y1="237.0" x2="746" y2="237.0" stroke="var(--grid)" stroke-width="1"/>
+<text x="46" y="241.0" text-anchor="end" class="tick">0.1</text>
+<line x1="54" y1="166.0" x2="746" y2="166.0" stroke="var(--grid)" stroke-width="1"/>
+<text x="46" y="170.0" text-anchor="end" class="tick">0.2</text>
+<line x1="54" y1="95.0" x2="746" y2="95.0" stroke="var(--grid)" stroke-width="1"/>
+<text x="46" y="99.0" text-anchor="end" class="tick">0.3</text>
+<line x1="54" y1="24.0" x2="746" y2="24.0" stroke="var(--grid)" stroke-width="1"/>
+<text x="46" y="28.0" text-anchor="end" class="tick">0.4</text>
+<line x1="54" y1="34.6" x2="746" y2="34.6" stroke="var(--accent)" stroke-width="1" stroke-dasharray="4 4" opacity="0.6"/>
+<text x="746" y="28.6" text-anchor="end" class="tick" fill="var(--accent)">base ≈ .38</text>
+<rect x="81.7" y="31.8" width="26" height="276.2" rx="2" class="gbar"/>
+<text x="94.7" y="26.8" text-anchor="middle" class="val">0.39</text>
+<rect x="115.7" y="37.5" width="26" height="270.5" rx="2" class="mbar"/>
+<text x="128.7" y="32.5" text-anchor="middle" class="val">0.38</text>
+<text x="111.7" y="328.0" text-anchor="middle" class="glab">Base</text>
+<rect x="197.0" y="246.2" width="26" height="61.8" rx="2" class="gbar"/>
+<text x="210.0" y="241.2" text-anchor="middle" class="val">0.09</text>
+<rect x="231.0" y="156.1" width="26" height="151.9" rx="2" class="mbar"/>
+<text x="244.0" y="151.1" text-anchor="middle" class="val">0.21</text>
+<text x="227.0" y="328.0" text-anchor="middle" class="glab">Terse</text>
+<text x="227.0" y="342.0" text-anchor="middle" class="glab">SFT</text>
+<rect x="312.3" y="296.6" width="26" height="11.4" rx="2" class="gbar"/>
+<text x="325.3" y="291.6" text-anchor="middle" class="val">0.02</text>
+<rect x="346.3" y="212.1" width="26" height="95.9" rx="2" class="mbar"/>
+<text x="359.3" y="207.1" text-anchor="middle" class="val">0.14</text>
+<text x="342.3" y="328.0" text-anchor="middle" class="glab">Terse</text>
+<text x="342.3" y="342.0" text-anchor="middle" class="glab">DPO</text>
+<rect x="427.7" y="195.1" width="26" height="112.9" rx="2" class="gbar"/>
+<text x="440.7" y="190.1" text-anchor="middle" class="val">0.16</text>
+<rect x="461.7" y="104.9" width="26" height="203.1" rx="2" class="mbar"/>
+<text x="474.7" y="99.9" text-anchor="middle" class="val">0.29</text>
+<text x="457.7" y="328.0" text-anchor="middle" class="glab">Worked</text>
+<text x="457.7" y="342.0" text-anchor="middle" class="glab">SFT</text>
+<rect x="543.0" y="308.0" width="26" height="0.0" rx="2" class="gbar"/>
+<text x="556.0" y="303.0" text-anchor="middle" class="val">0.00</text>
+<rect x="577.0" y="229.2" width="26" height="78.8" rx="2" class="mbar"/>
+<text x="590.0" y="224.2" text-anchor="middle" class="val">0.11</text>
+<text x="573.0" y="328.0" text-anchor="middle" class="glab">Worked</text>
+<text x="573.0" y="342.0" text-anchor="middle" class="glab">DPO</text>
+<rect x="658.3" y="240.6" width="26" height="67.4" rx="2" class="gbar"/>
+<text x="671.3" y="235.6" text-anchor="middle" class="val">0.10</text>
+<rect x="692.3" y="116.3" width="26" height="191.7" rx="2" class="mbar"/>
+<text x="705.3" y="111.3" text-anchor="middle" class="val">0.27</text>
+<text x="688.3" y="328.0" text-anchor="middle" class="glab">Scaled</text>
+<text x="688.3" y="342.0" text-anchor="middle" class="glab">SFT</text>
+<line x1="54" y1="308.0" x2="746" y2="308.0" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="54" y="366" width="14" height="14" rx="2" class="gbar"/><text x="74" y="377" class="leg">Qwen2.5-1.5B-Instruct (general)</text>
+<rect x="304" y="366" width="14" height="14" rx="2" class="mbar"/><text x="324" y="377" class="leg">Qwen2.5-Math-1.5B-Instruct (math)</text>
+</svg>
+      </div>
+      <figcaption>Fig. 1 — Accuracy by training condition. No trained variant beats the
+        base overall; worked ≥ terse everywhere; DPO ≤ SFT everywhere.</figcaption>
+    </figure>
+  </section>
+
+  <!-- TERSE 2x3 -->
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>The terse result, and its cause</h2></div>
+    <p class="lead">Trained on terse verified solutions, <em>both</em> models degraded —
+      monotonically, base → SFT → DPO. The mechanism is not inferred; it is visible in the
+      generations.</p>
+    <div class="twrap">
+      <table>
+        <thead><tr><th>Model</th><th class="num">Base</th><th class="num">+ SFT</th><th class="num">+ SFT + DPO</th></tr></thead>
+        <tbody>
+          <tr><td class="rowlab">general</td><td class="num">0.389</td><td class="num worst">0.087</td><td class="num worst">0.016</td></tr>
+          <tr><td class="rowlab">math</td><td class="num">0.381</td><td class="num">0.214</td><td class="num">0.135</td></tr>
+        </tbody>
+        <caption>Terse targets: accuracy falls at each training stage.</caption>
+      </table>
+    </div>
+    <p>The SFT model learns the <em>format</em> perfectly — 126/126 outputs end with a clean
+      “Solution:” — but stops reasoning and fabricates the intermediate arithmetic. On the
+      system <span class="pill">2x − 6y = 0, 3x − 4y = 5</span> (answer x = 3, y = 1):</p>
+    <div class="mech">
+      <div class="card good"><h3>Base — reasons correctly</h3>
+        <div class="eq">x = 3y<br>3(3y) − 4y = 5<br>5y = 5<br><span class="right">x = 3, y = 1 ✓</span></div></div>
+      <div class="card bad"><h3>Terse SFT — imitates, fabricates</h3>
+        <div class="eq">x = 3y<br><span class="wrong">15 − 18y = 0</span> &nbsp;(invented)<br>y = 5/6<br><span class="wrong">x = 5/2, y = 5/6 ✗</span></div></div>
+    </div>
+  </section>
+
+  <!-- WORKED vs TERSE -->
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>Worked targets beat terse</h2></div>
+    <p class="lead">Re-running the identical experiment with worked targets — the same math,
+      every computation shown (<span class="pill">3(3y) − 4y = 5 → 5y = 5</span>) — recovers
+      much of the loss at the SFT stage, for both models.</p>
+    <div class="twrap">
+      <table>
+        <thead><tr><th>Model</th><th>Format</th><th class="num">Base</th><th class="num">SFT</th><th class="num">DPO</th></tr></thead>
+        <tbody>
+          <tr><td class="rowlab">general</td><td>terse</td><td class="num">0.389</td><td class="num">0.087</td><td class="num">0.016</td></tr>
+          <tr><td class="rowlab">general</td><td><b>worked</b></td><td class="num">0.389</td><td class="num best">0.159</td><td class="num">0.000</td></tr>
+          <tr><td class="rowlab">math</td><td>terse</td><td class="num">0.381</td><td class="num">0.214</td><td class="num">0.135</td></tr>
+          <tr><td class="rowlab">math</td><td><b>worked</b></td><td class="num">0.381</td><td class="num best">0.286</td><td class="num">0.111</td></tr>
+        </tbody>
+        <caption>Worked ≥ terse at SFT for both models; DPO harmful throughout.</caption>
+      </table>
+    </div>
+    <p>The gains concentrate where the base was weak on a method it couldn't format. Worked
+      SFT even <b>beats the base</b> on the math model's Cramer's rule (0.00 → 0.15).</p>
+    <div class="twrap">
+      <table>
+        <caption>Per-method accuracy — base vs worked SFT. Arrows vs base.</caption>
+        <thead><tr><th>Method</th><th class="num">general base</th><th class="num">general worked</th><th class="num">math base</th><th class="num">math worked</th></tr></thead>
+        <tbody>
+          <tr><td class="rowlab">substitution</td><td class="num">0.94</td><td class="num down">0.44</td><td class="num">0.88</td><td class="num down">0.56</td></tr>
+          <tr><td class="rowlab">elimination</td><td class="num">0.56</td><td class="num flat">0.56</td><td class="num">0.75</td><td class="num down">0.69</td></tr>
+          <tr><td class="rowlab">Cramer's rule</td><td class="num">0.39</td><td class="num down">0.04</td><td class="num">0.00</td><td class="num up">0.15</td></tr>
+          <tr><td class="rowlab">matrix inverse</td><td class="num">0.39</td><td class="num down">0.00</td><td class="num">0.39</td><td class="num down">0.15</td></tr>
+          <tr><td class="rowlab">Gaussian elim.</td><td class="num">0.04</td><td class="num flat">0.04</td><td class="num">0.42</td><td class="num down">0.19</td></tr>
+          <tr><td class="rowlab">graphing</td><td class="num">0.25</td><td class="num down">0.13</td><td class="num">0.06</td><td class="num up">0.19</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SCALING -->
+  <section>
+    <div class="sec-head"><span class="sec-num">08</span><h2>Scaling verified data — and a correction</h2></div>
+    <p class="lead">Adding 5,624 verified synthetic solutions (7× the real set → 6,189 SFT
+      examples, 0 contamination with the test set) did <em>not</em> help.</p>
+    <div class="twrap">
+      <table>
+        <thead><tr><th>Model</th><th class="num">Base</th><th class="num">Worked SFT<br>(114 sys)</th><th class="num">Scaled SFT<br>(6,189 ex)</th></tr></thead>
+        <tbody>
+          <tr><td class="rowlab">general</td><td class="num">0.389</td><td class="num">0.159</td><td class="num worst">0.095</td></tr>
+          <tr><td class="rowlab">math</td><td class="num">0.381</td><td class="num">0.286</td><td class="num flat">0.270</td></tr>
+        </tbody>
+        <caption>Math flat (within noise); general regressed.</caption>
+      </table>
+    </div>
+    <div class="callout"><p><strong>A correction we made openly.</strong> The first
+      hypothesis — “synthetic is harder” — was <em>refuted by inspection</em>: synthetic
+      systems have similar coefficient sizes (5.4 vs 6.0) but <b>0% fractional solutions vs
+      37%</b> in real data, and the scaled run used more iterations (1500 vs 600). So the
+      general model's drop conflates a distribution mismatch with a training-budget confound.
+      The honest reading: for small models, <strong>data distribution and training budget
+      matter more than raw volume.</strong></p></div>
+  </section>
+
+  <!-- LIMITS / NEXT -->
+  <section>
+    <div class="sec-head"><span class="sec-num">09</span><h2>Limitations &amp; next steps</h2></div>
+    <ul class="clean">
+      <li>Small 1.5B / 4-bit models on a laptop — the “training net-hurts a capable base” effect should shrink at 7B+ with more headroom.</li>
+      <li>114 real training systems is tiny; the clean scaling test is a <b>compute-matched</b> control (worked-114 at 1500 iters) to isolate volume from steps.</li>
+      <li>The substantive fix the analysis points to: a <b>distribution-matched</b> synthetic set — ~37% fractional solutions, matched coefficient statistics — then re-scale.</li>
+      <li>DPO harmful here; worth revisiting with KL regularization, on-policy refresh, or harder multi-step negatives.</li>
+      <li>Method-faithfulness (does it use the <em>requested</em> method) is logged and is a promising primary metric where even the strong base has headroom.</li>
+    </ul>
+  </section>
+
+  <!-- APPENDIX -->
+  <section>
+    <div class="sec-head"><span class="sec-num">10</span><h2>Appendix — every run</h2></div>
+    <div class="twrap">
+      <table>
+        <caption>All conditions. acc = exact answer accuracy; faith = method-faithfulness; n = 126 test items.</caption>
+        <thead><tr><th>Condition</th><th class="num">acc</th><th class="num">faith</th><th class="num">correct</th><th class="num">wrong</th><th class="num">no-ans</th></tr></thead>
+        <tbody>
+          <tr><td class="rowlab">general · base</td><td class="num">0.389</td><td class="num">1.00</td><td class="num">49</td><td class="num">70</td><td class="num">7</td></tr>
+          <tr><td class="rowlab">general · terse SFT</td><td class="num">0.087</td><td class="num">1.00</td><td class="num">11</td><td class="num">115</td><td class="num">0</td></tr>
+          <tr><td class="rowlab">general · terse DPO</td><td class="num">0.016</td><td class="num">0.99</td><td class="num">2</td><td class="num">100</td><td class="num">24</td></tr>
+          <tr><td class="rowlab">general · worked SFT</td><td class="num">0.159</td><td class="num">1.00</td><td class="num">20</td><td class="num">105</td><td class="num">1</td></tr>
+          <tr><td class="rowlab">general · worked DPO</td><td class="num">0.000</td><td class="num">1.00</td><td class="num">0</td><td class="num">81</td><td class="num">45</td></tr>
+          <tr><td class="rowlab">general · scaled SFT</td><td class="num">0.095</td><td class="num">1.00</td><td class="num">12</td><td class="num">112</td><td class="num">2</td></tr>
+          <tr><td class="rowlab">math · base</td><td class="num">0.381</td><td class="num">0.98</td><td class="num">48</td><td class="num">78</td><td class="num">0</td></tr>
+          <tr><td class="rowlab">math · terse SFT</td><td class="num">0.214</td><td class="num">1.00</td><td class="num">27</td><td class="num">99</td><td class="num">0</td></tr>
+          <tr><td class="rowlab">math · terse DPO</td><td class="num">0.135</td><td class="num">0.96</td><td class="num">17</td><td class="num">56</td><td class="num">53</td></tr>
+          <tr><td class="rowlab">math · worked SFT</td><td class="num">0.286</td><td class="num">1.00</td><td class="num">36</td><td class="num">90</td><td class="num">0</td></tr>
+          <tr><td class="rowlab">math · worked DPO</td><td class="num">0.111</td><td class="num">0.96</td><td class="num">14</td><td class="num">95</td><td class="num">17</td></tr>
+          <tr><td class="rowlab">math · scaled SFT</td><td class="num">0.270</td><td class="num">1.00</td><td class="num">34</td><td class="num">90</td><td class="num">2</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <hr class="rule">
+  <footer>
+    <p>Reproducible pipeline · questions verbatim from CAHLR/OATutor-Content · solutions and
+       grading by sympy · every target independently re-verified (0 failures).</p>
+    <p style="margin-top:6px">Repo: Hassan-Raza-Shaikh/Preference-Learning-in-Education · generated 2026-09-15</p>
+  </footer>
+
+</div>
