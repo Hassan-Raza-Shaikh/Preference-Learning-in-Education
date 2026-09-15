@@ -1,0 +1,20 @@
+{
+  "generator": "deterministic sympy WORKED solutions; questions verbatim from OATutor",
+  "counts": {
+    "systems_emitted": 164,
+    "sft_method_examples": 811,
+    "preference_pairs": 811
+  },
+  "verified_by_method": {
+    "substitution": 105,
+    "elimination": 107,
+    "graphing": 107,
+    "cramers_rule": 164,
+    "inverse_matrix": 164,
+    "gaussian_elimination": 164
+  },
+  "skips": {
+    "skip_no_unique_solution": 27,
+    "skip_unparsed": 560
+  }
+}

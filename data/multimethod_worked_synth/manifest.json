@@ -1,0 +1,15 @@
+{
+  "synthetic": true,
+  "n_systems": 1200,
+  "n_sft_examples": 5624,
+  "n_preference_pairs": 5624,
+  "seed": 20260911,
+  "verified_by_method": {
+    "cramers_rule": 1200,
+    "inverse_matrix": 1200,
+    "gaussian_elimination": 1200,
+    "substitution": 642,
+    "elimination": 691,
+    "graphing": 691
+  }
+}
