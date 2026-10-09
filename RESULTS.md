@@ -81,9 +81,11 @@ Re-running the identical experiment with **worked** targets (same math, arithmet
 | math | **worked** | 0.381 | **0.286** | 0.111 |
 
 **Findings.**
-1. **Worked beats terse at SFT for both models** — general +8pts (0.087→0.159),
-   math +7pts (0.214→0.286). Showing the arithmetic reduces the "imitate-format,
-   fabricate-arithmetic" failure. Clearest on substitution (general): terse 0.12 → worked 0.44.
+1. **Worked beats terse at SFT** — general +7pts (0.087→0.159), math +7pts (0.214→0.286).
+   Showing the arithmetic reduces the "imitate-format, fabricate-arithmetic" failure.
+   Clearest on substitution (general): terse 0.12 → worked 0.44.
+   *[Revised, §6: with 95% CIs this is significant for the general model only; the math
+   model's interval includes zero.]*
 2. **DPO hurts at this scale** — every DPO cell is below its SFT cell, catastrophic for the
    small general model (→0). The verified preference pairs separate perfectly (a rule-based
    judge prefers chosen 811/811), so this is a model-capacity boundary, not a data problem.
@@ -91,10 +93,11 @@ Re-running the identical experiment with **worked** targets (same math, arithmet
    bases already reason well on methods they know, and LoRA taxes those slightly — but
    worked SFT **beats the base on methods the base lacked**: math Cramer's 0.00 → 0.15,
    and recovers elimination to 0.69.
+   *[Revised, §6: at 1500 iterations the math model reaches parity with its base, 0.389 vs
+   0.381.]*
 
-**Takeaway.** For small models, *solution format (worked vs. terse) matters more than the
-correctness of the target*; SFT ≫ DPO; and gains concentrate on methods the base can't
-already do.
+**Takeaway (at 600 iterations).** Solution format matters (firmly for the general model);
+SFT ≫ DPO; gains concentrate on methods the base can't already do.
 
 ---
 
@@ -119,19 +122,111 @@ Two caveats, established by inspection (this is where honest analysis matters):
    sizes (max-coef 5.4 vs 6.0) — but they are **0% fractional-solution vs 37% in real data**,
    a solution-distribution mismatch.
 2. **An iteration confound.** The scaled run used 1500 iters vs the worked-114 run's 600.
-   For the fragile general model, *more SFT steps on this task = more reasoning-suppression*,
-   so its regression conflates "more data" with "more steps." A compute-matched control
-   (worked-114 at 1500 iters) is needed to isolate the data-volume effect; the math model,
-   being flat, is less sensitive to this confound.
+   *[Refuted, §6: the compute-matched control shows longer training does not hurt — it
+   helps the math model significantly. Compared at equal compute, the original synthetic
+   data significantly hurt **both** models; "math flat" was an artifact of comparing against
+   the 600-iteration run.]*
 
-**Takeaway.** For these small models, **data distribution and training budget matter more
-than raw volume.** The path to gains is distribution-matched synthetic data (include
-fractional-solution systems; match coefficient statistics) and careful early-stopping —
-not simply more examples.
+*[The takeaway originally here — that distribution-matched data would fix scaling — was
+tested in §6. It removed the harm for the general model but did not help either model.]*
 
 ---
 
-## 6. What makes this a clean study
+## 6. Controls, distribution-matched data, and confidence intervals (Oct 2026)
+
+Two runs were added to resolve the scaling question, and every result now carries a 95%
+confidence interval.
+
+- **Compute-matched control.** Worked SFT on the 114 real systems at **1500** iterations
+  (same budget as the scaled runs), isolating training length from data volume.
+- **Distribution-matched synthetic set.** Coefficients and constants bootstrapped from the
+  real **train** split only; 2/3-variable mix, coefficient sizes, fractional coefficients and
+  fractional-solution share (0.38) all match. Same volume as the original synthetic set
+  (5,624 examples; 1,136 systems). 0 verification failures; 0 overlap with valid/test.
+- **Statistics.** The 126 test items are 26 systems × methods, so items are not independent.
+  Intervals come from a cluster bootstrap that resamples **systems**; contrasts resample both
+  conditions with the same draws (paired). B = 10,000, seed 20261009
+  (`experiments/analyze_ci.py`; point estimates reproduce every stored eval exactly).
+
+#### General model (Qwen2.5-1.5B-Instruct)
+
+| condition | acc | 95% CI |
+|---|---|---|
+| base | 0.389 | [0.270, 0.500] |
+| terse SFT (600) | 0.087 | [0.036, 0.145] |
+| terse DPO | 0.016 | [0.000, 0.039] |
+| worked SFT (600) | 0.159 | [0.085, 0.232] |
+| worked DPO | 0.000 | [0.000, 0.000] |
+| worked SFT (1500) | 0.183 | [0.094, 0.271] |
+| scaled-old SFT (1500) | 0.095 | [0.043, 0.152] |
+| scaled-matched SFT (1500) | 0.143 | [0.079, 0.209] |
+
+| contrast | diff | 95% CI | CI excludes 0? |
+|---|---|---|---|
+| format: worked - terse (SFT@600) | +0.071 | [+0.024, +0.125] | yes |
+| DPO - SFT (terse) | -0.071 | [-0.123, -0.023] | yes |
+| DPO - SFT (worked) | -0.159 | [-0.232, -0.085] | yes |
+| steps: 1500 - 600 (worked) | +0.024 | [-0.039, +0.094] | no |
+| volume, mismatched: scaled-old - worked (@1500) | -0.087 | [-0.171, -0.009] | yes |
+| volume, matched: scaled-matched - worked (@1500) | -0.040 | [-0.127, +0.041] | no |
+| distribution: matched - old (@1500) | +0.048 | [+0.016, +0.081] | yes |
+| best SFT - base | -0.206 | [-0.311, -0.095] | yes |
+
+#### Math model (Qwen2.5-Math-1.5B-Instruct)
+
+| condition | acc | 95% CI |
+|---|---|---|
+| base | 0.381 | [0.286, 0.459] |
+| terse SFT (600) | 0.214 | [0.109, 0.319] |
+| terse DPO | 0.135 | [0.075, 0.194] |
+| worked SFT (600) | 0.286 | [0.163, 0.407] |
+| worked DPO | 0.111 | [0.051, 0.174] |
+| worked SFT (1500) | 0.389 | [0.248, 0.519] |
+| scaled-old SFT (1500) | 0.270 | [0.167, 0.371] |
+| scaled-matched SFT (1500) | 0.238 | [0.148, 0.326] |
+
+| contrast | diff | 95% CI | CI excludes 0? |
+|---|---|---|---|
+| format: worked - terse (SFT@600) | +0.071 | [-0.008, +0.159] | no |
+| DPO - SFT (terse) | -0.079 | [-0.159, -0.008] | yes |
+| DPO - SFT (worked) | -0.175 | [-0.295, -0.067] | yes |
+| steps: 1500 - 600 (worked) | +0.103 | [+0.032, +0.171] | yes |
+| volume, mismatched: scaled-old - worked (@1500) | -0.119 | [-0.217, -0.017] | yes |
+| volume, matched: scaled-matched - worked (@1500) | -0.151 | [-0.283, -0.029] | yes |
+| distribution: matched - old (@1500) | -0.032 | [-0.108, +0.044] | no |
+| best SFT - base | +0.008 | [-0.103, +0.117] | no |
+
+(cluster bootstrap over 26 test systems, B=10000, seed=20261009)
+
+**Findings.**
+1. **DPO hurts — the most robust result.** All four DPO-vs-SFT contrasts exclude zero.
+2. **Format (worked − terse)** is significant for the general model (+0.071); the math model
+   has the same point estimate but its interval includes zero.
+3. **Training length.** 1500 vs 600 iterations helps the math model significantly (+0.103) and
+   brings it to parity with its base (+0.008, n.s.). No significant effect for the general model.
+4. **Synthetic scaling did not help.** At equal compute, the original synthetic data hurt both
+   models. Distribution matching removed the harm for the general model (matched vs original
+   +0.048, significant; matched vs real-only n.s.) but not for the math model (matched still
+   −0.151 vs real-only, significant).
+5. **Validation loss misleads.** Adding matched synthetic data kept validation loss (on real
+   held-out solutions) flat and lower than real-only training, which drifts upward from
+   memorisation — yet exact-answer accuracy stayed flat (general) or fell (math). See
+   `report_assets/loss_1500.png`.
+
+**Untested hypotheses** (labelled as such): matching marginal statistics misses the *joint*
+structure of curated textbook systems (clean intermediate arithmetic); 91% synthetic dilutes
+the real distribution; token loss is dominated by template text, not arithmetic.
+
+**Integrity note.** While building the matched set, `sympy.nsimplify` was found to rewrite
+some ordinary rationals as products of fractional prime powers (1387/50 →
+5·2^(7/19)·3^(518/589)·…). Final answers were always protected by exact back-substitution,
+but displayed steps were not. All call sites were replaced with an exact converter and a
+step-level guard was added. An audit found **0 of ~36k** existing step strings affected, and
+regenerating all prior datasets with the fix is **byte-identical** — no earlier result changes.
+
+---
+
+## 7. What makes this a clean study
 
 - **Verifiable eval.** sympy grades every answer exactly — no judge model, no ambiguity.
 - **No hallucination anywhere.** Every training target (real and synthetic) is
@@ -141,11 +236,16 @@ not simply more examples.
 - **Mechanistic, not just numeric.** Each trend is explained by inspecting the actual
   generations (format-imitation vs. reasoning-suppression, per-method headroom).
 
-## 7. Limits and next steps
+## 8. Limits and next steps
 
-- Small (1.5B, 4-bit) models on a laptop; effects may shrink at 7B+ with more headroom.
-- 114 real train systems is tiny — hence the scaling run (§5).
-- DPO harmful here; worth revisiting at larger scale or with a KL-regularized/again-on-policy
-  variant, or with harder (multi-step) negatives.
-- Method-faithfulness (does it use the *requested* method) is logged and is a promising
-  primary metric where even the strong base has headroom.
+- **Limits.** 1.5B / 4-bit models on a laptop; one training run (one seed) per condition;
+  26 test systems give intervals of roughly ±0.1, so smaller differences should not be
+  over-read.
+- **Test the scaling hypotheses** from §6: constrain synthetic systems to clean (integer)
+  intermediate arithmetic; vary the real:synthetic mixing ratio; select checkpoints by sympy
+  accuracy on the validation set instead of by loss.
+- **DPO** was harmful throughout; revisit with KL regularisation, on-policy pairs, or harder
+  multi-step negatives — or at larger scale.
+- **Method-faithfulness** is logged but keyword-based; a real check (does the solution execute
+  the requested method's operations) is the next metric to build.
+- **Scale** to a 7B base when a GPU is available.
