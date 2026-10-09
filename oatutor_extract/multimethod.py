@@ -23,6 +23,30 @@ import sympy as sp
 
 x, y, z = sp.symbols('x y z')
 SYMS = {'x': x, 'y': y, 'z': z}
+
+
+def exact(v):
+    """Exact value with any Floats replaced by their exact decimal Rational.
+
+    Deliberately NOT sympy.nsimplify: nsimplify approximates and can rewrite an
+    ordinary rational as a product of fractional prime powers (e.g. 1387/50 ->
+    5*2**(7/19)*3**(518/589)*...), which would put fabricated-looking values into
+    displayed solution steps.
+    """
+    v = sp.sympify(v)
+    floats = v.atoms(sp.Float)
+    if floats:
+        v = v.xreplace({f: sp.Rational(str(f)) for f in floats})
+    return v
+
+
+# Anything irrational in a displayed step means a rendering bug — a linear system with
+# rational coefficients never needs roots or fractional powers.
+IRRATIONAL_ARTIFACT = re.compile(r'\^\{\\frac|\\sqrt|\*\*|\^\{\d+/\d+\}')
+
+
+def has_irrational_artifact(steps):
+    return any(IRRATIONAL_ARTIFACT.search(s) for s in steps)
 EQ_BLOCK = re.compile(r'\$\$(.+?)\$\$', re.S)
 
 
@@ -83,10 +107,10 @@ def system_of(eqs):
     A, b = [], []
     for e in eqs:
         expr = sp.expand(e.lhs - e.rhs)
-        row = [sp.nsimplify(expr.coeff(v, 1)) for v in varset]
+        row = [exact(expr.coeff(v, 1)) for v in varset]
         const = -expr.subs({v: 0 for v in varset})
         A.append(row)
-        b.append(sp.nsimplify(const))
+        b.append(exact(const))
     return varset, sp.Matrix(A), sp.Matrix(b)
 
 
@@ -94,7 +118,7 @@ def system_of(eqs):
 # formatting
 # --------------------------------------------------------------------------- #
 def tex(v):
-    v = sp.nsimplify(v)
+    v = exact(v)
     if v.is_Integer:
         return str(int(v))
     if v.is_Rational:
@@ -118,7 +142,7 @@ def reference_solution(vars_, A, b):
     point = list(sol)[0]
     if any(len(t.free_symbols) for t in point):   # infinite solutions -> free vars remain
         return None
-    return [sp.nsimplify(t) for t in point]
+    return [exact(t) for t in point]
 
 
 def satisfies(A, b, vars_, values):
@@ -136,7 +160,7 @@ def satisfies(A, b, vars_, values):
 def eqline(coeffs, vars_, const):
     terms = []
     for c, v in zip(coeffs, vars_):
-        c = sp.nsimplify(c)
+        c = exact(c)
         if c == 0:
             continue
         if c == 1:
@@ -158,12 +182,12 @@ def gen_substitution(vars_, A, b, ref):
     # solve eq1 for v0 if possible else v1
     if a != 0:
         expr = (b[0] - bb * v1) / a
-        steps.append(f"Solve the first equation for $${v0}$$: $${v0}={sp.latex(sp.nsimplify(expr))}$$.")
+        steps.append(f"Solve the first equation for $${v0}$$: $${v0}={sp.latex(exact(expr))}$$.")
         sub = A[1, 0] * expr + A[1, 1] * v1 - b[1]
-        steps.append(f"Substitute into the second equation: $${sp.latex(sp.nsimplify(sub))}=0$$.")
+        steps.append(f"Substitute into the second equation: $${sp.latex(exact(sub))}=0$$.")
         v1val = sp.solve(sp.Eq(sub, 0), v1)[0]
         steps.append(f"Solve for $${v1}$$: $${v1}={tex(v1val)}$$.")
-        v0val = sp.nsimplify(expr.subs(v1, v1val))
+        v0val = exact(expr.subs(v1, v1val))
         steps.append(f"Back-substitute to get $${v0}={tex(v0val)}$$.")
         final = [v0val, v1val]
     else:
@@ -191,7 +215,7 @@ def gen_elimination(vars_, A, b, ref):
         v1val = sp.solve(sp.Eq(dv[1] * v1, dd), v1)[0]
         steps.append(f"Solve for $${v1}$$: $${v1}={tex(v1val)}$$.")
         v0val = sp.solve(sp.Eq(a1 * x + b1 * v1val - c1, 0), x)[0] if a1 != 0 else sp.solve(sp.Eq(a2 * x + b2 * v1val - c2, 0), x)[0]
-        v0val = sp.nsimplify(v0val)
+        v0val = exact(v0val)
         steps.append(f"Back-substitute to get $${v0}={tex(v0val)}$$.")
         final = [v0val, v1val]
     else:
@@ -205,7 +229,7 @@ def gen_elimination(vars_, A, b, ref):
         v0val = sp.solve(sp.Eq(dv[0] * v0, dd), v0)[0]
         steps.append(f"Solve for $${v0}$$: $${v0}={tex(v0val)}$$.")
         v1val = sp.solve(sp.Eq(a1 * v0val + b1 * y - c1, 0), y)[0]
-        v1val = sp.nsimplify(v1val)
+        v1val = exact(v1val)
         steps.append(f"Back-substitute to get $${v1}={tex(v1val)}$$.")
         final = [v0val, v1val]
     return {"method": "elimination", "steps": steps, "final": final}
@@ -221,7 +245,7 @@ def gen_cramer(vars_, A, b, ref):
         Aj = A.copy()
         Aj[:, j] = b
         Dj = Aj.det()
-        val = sp.nsimplify(Dj / D)
+        val = exact(Dj / D)
         steps.append(f"Replace column {j+1} with the constants: $$D_{{{v}}}={tex(Dj)}$$, so $${v}=\\frac{{D_{{{v}}}}}{{D}}={tex(val)}$$.")
         final.append(val)
     return {"method": "cramers_rule", "steps": steps, "final": final}
@@ -237,7 +261,7 @@ def gen_matrix_inverse(vars_, A, b, ref):
         f"Compute $$A^{{-1}}={sp.latex(Ainv)}$$.",
     ]
     prod = Ainv * b
-    final = [sp.nsimplify(prod[i]) for i in range(prod.rows)]
+    final = [exact(prod[i]) for i in range(prod.rows)]
     steps.append(f"Multiply: $$\\mathbf{{v}}=A^{{-1}}\\mathbf{{b}}={sp.latex(sp.Matrix(final))}$$.")
     steps.append(f"Read off the solution: $${sol_str(vars_, final)}$$.")
     return {"method": "inverse_matrix", "steps": steps, "final": final}
@@ -250,7 +274,7 @@ def gen_gaussian(vars_, A, b, ref):
         f"Form the augmented matrix $$[A|\\mathbf{{b}}]={sp.latex(aug)}$$.",
         f"Row-reduce to reduced row-echelon form: $${sp.latex(rref)}$$.",
     ]
-    final = [sp.nsimplify(rref[i, rref.cols - 1]) for i in range(len(vars_))]
+    final = [exact(rref[i, rref.cols - 1]) for i in range(len(vars_))]
     steps.append(f"The identity block on the left gives $${sol_str(vars_, final)}$$.")
     return {"method": "gaussian_elimination", "steps": steps, "final": final}
 
@@ -265,7 +289,7 @@ def gen_graphing(vars_, A, b, ref):
         if b_ == 0:
             lines.append(f"Equation {i+1} is the vertical line $${v0}={tex(c_/a_)}$$.")
         else:
-            m = sp.nsimplify(-a_ / b_); k = sp.nsimplify(c_ / b_)
+            m = exact(-a_ / b_); k = exact(c_ / b_)
             lines.append(f"Rewrite equation {i+1} as $${v1}={sp.latex(m)}{v0}{'+' if k>=0 else '-'}{tex(abs(k))}$$ (slope $${tex(m)}$$).")
     steps = lines + [
         f"Graph both lines; they intersect at a single point.",
@@ -350,13 +374,17 @@ def build(record):
             continue
         if not out or not out.get("steps"):
             continue
-        final = [sp.nsimplify(v) for v in out["final"]]
+        final = [exact(v) for v in out["final"]]
         # VERIFY 1: matches reference   VERIFY 2: satisfies original equations
         if [sp.simplify(final[i] - ref[i]) == 0 for i in range(len(ref))] != [True] * len(ref):
             stats[f"reject_final_mismatch:{out['method']}"] += 1
             continue
         if not satisfies(A, b, vars_, final):
             stats[f"reject_unsatisfied:{out['method']}"] += 1
+            continue
+        # VERIFY 3: no irrational rendering artifacts anywhere in the displayed steps
+        if has_irrational_artifact(out["steps"] + [sol_str(vars_, final)]):
+            stats[f"reject_irrational_step:{out['method']}"] += 1
             continue
         stats[f"verified:{out['method']}"] += 1
         chosen_text = worked_text(out["method"], out["steps"] + [f"Solution: $${sol_str(vars_, final)}$$."])

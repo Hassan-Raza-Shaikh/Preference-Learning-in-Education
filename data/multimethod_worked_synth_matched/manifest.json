@@ -1,0 +1,18 @@
+{
+  "synthetic": true,
+  "matched_to_real_train": true,
+  "n_systems": 1136,
+  "n_sft_examples": 5624,
+  "n_preference_pairs": 5624,
+  "seed": 20261009,
+  "fractional_solution_share": 0.378,
+  "target_fractional_share": 0.377,
+  "verified_by_method": {
+    "cramers_rule": 1136,
+    "inverse_matrix": 1136,
+    "gaussian_elimination": 1136,
+    "substitution": 724,
+    "elimination": 746,
+    "graphing": 746
+  }
+}

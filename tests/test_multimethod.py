@@ -84,3 +84,13 @@ def test_no_unique_solution_returns_none():
     # dependent system (same line) -> infinite solutions
     vars_, A, b = system_of(extract_system("$$x+y=1$$ $$2x+2y=2$$"))
     assert reference_solution(vars_, A, b) is None
+
+
+def test_exact_never_mangles_rationals():
+    # Regression: sympy.nsimplify rewrote 1387/50 as a product of fractional prime powers.
+    from oatutor_extract.multimethod import exact, has_irrational_artifact
+    for r in (sp.Rational(1387, 50), sp.Rational(-2152, 2495), sp.Rational(1424, 501)):
+        assert exact(r) == r and exact(r).is_Rational
+    assert exact(sp.Float("0.3")) == sp.Rational(3, 10)          # floats -> exact decimals
+    assert has_irrational_artifact([sp.latex(sp.nsimplify(sp.Rational(1387, 50)))])
+    assert not has_irrational_artifact([r"x=\frac{61}{187}", "3(3y)-4y=5"])

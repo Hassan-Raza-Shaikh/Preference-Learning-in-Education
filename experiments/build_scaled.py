@@ -40,6 +40,13 @@ def to_messages(example):
 
 
 def main():
+    import argparse
+    global SYNTH, OUT
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--synth", default=SYNTH, help="synthetic sft_multimethod.jsonl")
+    ap.add_argument("--out", default=OUT, help="output data dir (gets sft/{train,valid,test}.jsonl)")
+    a = ap.parse_args()
+    SYNTH, OUT = a.synth, a.out
     os.makedirs(os.path.join(OUT, "sft"), exist_ok=True)
 
     # held-out signatures (valid + test) from the real worked splits
