@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutor Teacher View</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--ink:#1d2433;--muted:#5d6678;--line:#dfe3ec;--accent:#3a5ba0;--accent-ink:#fff;--bar:#e7ebf3;--bad:#a1452b}
+@media (prefers-color-scheme:dark){:root{--bg:#141821;--card:#1d2230;--ink:#e8ebf2;--muted:#9aa3b5;--line:#2e3546;--accent:#7d9be0;--accent-ink:#0e1220;--bar:#2a3142;--bad:#f0a184}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:1.35rem;margin:0 0 4px}h2{font-size:1.05rem;margin:0 0 12px}
+.sub{color:var(--muted);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin:0 0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 22px}
+label{display:block}fieldset{border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:0}legend{color:var(--muted);font-size:.85rem}
+select{width:100%;max-width:100%}
+select,input[type=number]{font:inherit;padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+button{font:inherit;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);padding:8px 14px;cursor:pointer}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600}
+.bar{width:90px;height:8px;border-radius:99px;background:var(--bar);overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px}.bar>i{display:block;height:100%;background:var(--accent)}
+.small{font-size:.82rem;color:var(--muted)}.err{color:var(--bad)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Teacher view</h1>
+  <p class="sub">Configure the tutor for your class and follow each learner's progress. Refreshes every 5 seconds.</p>
+
+  <section class="card">
+    <h2>Class settings</h2>
+    <div class="grid" id="form"></div>
+    <div style="margin-top:14px"><button id="save">Save settings</button> <span id="msg" class="small"></span></div>
+  </section>
+
+  <section class="card">
+    <h2>Learners</h2>
+    <div class="tablewrap"><table id="tbl"></table></div>
+    <p class="small">"Works best" = the help type after which this learner most often solved the problem (outcome).
+      "Liked most" = the help type they chose or rated highest (stated preference). The two can differ; both are shown on purpose.</p>
+  </section>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const METHODS={substitution:"Substitution",elimination:"Elimination",graphing:"Graphing",cramers_rule:"Cramer's rule",inverse_matrix:"Matrix inverse",gaussian_elimination:"Gaussian elimination"};
+const ARMS={example:"Worked example",faded:"Faded (first steps done)",outline:"Method outline",none:"No help"};
+const MODES={learner_choice:"Learner chooses the help (from two offered)",rule:"Tutor chooses by mastery (example, then faded, then outline)",adaptive:"Tutor learns what works (experimental)",fixed:"Always the same help (control group)"};
+let CFG=null, formBuilt=false;
+function checks(name,opts,sel){return `<fieldset><legend>${name}</legend>${Object.entries(opts).map(([k,v])=>`<label><input type="checkbox" data-g="${name}" value="${k}" ${sel.includes(k)?"checked":""}> ${esc(v)}</label>`).join("")}</fieldset>`}
+function buildForm(c){
+  $("#form").innerHTML=
+   checks("Methods to practise",METHODS,c.skills)+
+   checks("Help types allowed",ARMS,c.allowed_arms)+
+   `<div><label>Mode<br><select id="mode">${Object.entries(MODES).map(([k,v])=>`<option value="${k}" ${c.mode===k?"selected":""}>${esc(v)}</option>`).join("")}</select></label>
+    <label style="margin-top:8px">Help type in "always the same" mode<br><select id="fixed">${Object.entries(ARMS).map(([k,v])=>`<option value="${k}" ${c.fixed_arm===k?"selected":""}>${esc(v)}</option>`).join("")}</select></label></div>`+
+   `<div>${checks("System size",{"2":"2 variables","3":"3 variables"},c.n_vars.map(String))}
+    <label style="margin-top:8px"><input type="checkbox" id="pickm" ${c.learner_can_pick_method?"checked":""}> Learners may pick the method</label></div>`+
+   `<div><label>Weight on stated preference (0 = only results count, 1 = only what learners like)<br><input type="number" id="pw" min="0" max="1" step="0.1" value="${c.preference_weight}"></label>
+    <label style="margin-top:8px">Mastery threshold<br><input type="number" id="thr" min="0.5" max="0.99" step="0.01" value="${c.mastery_threshold}"></label></div>`;
+}
+function readForm(){
+  const g=n=>[...document.querySelectorAll(`input[data-g="${n}"]:checked`)].map(i=>i.value);
+  return {skills:g("Methods to practise"),allowed_arms:g("Help types allowed"),mode:$("#mode").value,fixed_arm:$("#fixed").value,
+    n_vars:g("System size").map(Number),learner_can_pick_method:$("#pickm").checked,preference_weight:+$("#pw").value,mastery_threshold:+$("#thr").value};
+}
+async function load(){
+  const d=await (await fetch("/api/teacher")).json(); CFG=d.config;
+  if(!formBuilt){buildForm(CFG);formBuilt=true;}
+  const sk=d.skills;
+  let h=`<tr><th>Learner</th><th>Problems</th><th>Correct</th>${sk.map(s=>`<th>${esc(s.label)}</th>`).join("")}<th>Help: works best / liked most</th><th>Method picks</th></tr>`;
+  if(!d.learners.length) h+=`<tr><td colspan="${sk.length+5}" class="small">No learners yet.</td></tr>`;
+  d.learners.forEach(l=>{
+    const pref=Object.entries(l.preferences).map(([b,p])=>`<div><span class="small">${b} mastery:</span> ${esc(ARMS[p.works_best]||"–")} / ${esc(ARMS[p.liked_most]||"–")}</div>`).join("")||"<span class='small'>not enough data</span>";
+    h+=`<tr><td>${esc(l.learner_id)}</td><td>${l.problems}</td><td>${l.accuracy==null?"–":Math.round(l.accuracy*100)+"%"}</td>`+
+      sk.map(s=>{const v=l.mastery[s.id]??0;return `<td><span class="bar"><i style="width:${Math.round(v*100)}%"></i></span>${Math.round(v*100)}%</td>`}).join("")+
+      `<td>${pref}</td><td>${Object.entries(l.method_choices).map(([m,n])=>`${esc(METHODS[m])}: ${n}`).join("<br>")||"–"}</td></tr>`;
+  });
+  $("#tbl").innerHTML=h;
+}
+$("#save").onclick=async()=>{
+  $("#msg").textContent="";
+  const r=await fetch("/api/config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({config:readForm()})});
+  const j=await r.json(); $("#msg").className=r.ok?"small":"small err"; $("#msg").textContent=r.ok?"Saved.":j.error;
+  if(r.ok){formBuilt=false;load();}
+};
+load(); setInterval(load,5000);
+</script>
+</body>
+</html>
