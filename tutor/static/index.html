@@ -48,6 +48,15 @@ ol{padding-left:22px;margin:6px 0}li{margin:4px 0}
     <div class="err" id="loginErr"></div>
   </section>
 
+  <section id="quiz" class="card hidden">
+    <div class="row" style="justify-content:space-between"><h2 style="margin:0">Short quiz</h2><span class="tag" id="qProg"></span></div>
+    <p class="small">No help in the quiz. Just do your best; your teacher uses this to see how the tutor is working.</p>
+    <div id="qBody"><div><strong>Solve using <span id="qMethod"></span></strong></div><div class="eqs" id="qEqs"></div>
+      <div class="row" style="margin-top:8px"><input id="qAns" type="text" placeholder="e.g. x=2, y=-1/3" autocomplete="off" style="flex:1">
+        <button class="primary" id="qSubmit">Submit</button></div></div>
+    <div class="err" id="qErr"></div>
+  </section>
+
   <section id="home" class="card hidden">
     <h2>Your progress</h2>
     <div class="bars" id="bars"></div>
@@ -98,7 +107,7 @@ async function api(path, body){
   const r = await fetch(path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({learner_id:LID,...body})});
   const j = await r.json(); if(!r.ok) throw new Error(j.error||"Something went wrong"); return j;
 }
-function show(ids){ ["home","problem","offer","explain","answerBox","result"].forEach(i=>$("#"+i).classList.toggle("hidden",!ids.includes(i))); }
+function show(ids){ ["quiz","home","problem","offer","explain","answerBox","result"].forEach(i=>$("#"+i).classList.toggle("hidden",!ids.includes(i))); }
 function drawBars(m){
   const el=$("#bars"); el.innerHTML="";
   STATE.skills.forEach(s=>{ const v=m[s.id]??0;
@@ -120,8 +129,25 @@ async function login(){
     if(STATE.can_pick_method){ $("#pick").classList.remove("hidden");
       $("#pickRow").innerHTML=STATE.skills.map(s=>`<button data-m="${s.id}">${esc(s.label)}</button>`).join("");
       $("#pickRow").querySelectorAll("button").forEach(b=>b.onclick=()=>next(b.dataset.m)); }
+    const a=STATE.assessment; if(a && a.answered<a.total) return quizNext();
     show(["home"]);
   }catch(e){ $("#loginErr").textContent=e.message; }
+}
+let QID=null;
+async function quizNext(){
+  $("#qErr").textContent="";
+  const r=await api("/api/assess/next",{});
+  if(r.done){ show(["home"]); $("#homeErr").textContent="Quiz finished, thank you! You can practise now."; return; }
+  QID=r.problem.problem_id; $("#qMethod").textContent=r.method_label;
+  $("#qProg").textContent=`question ${r.status.answered+1} of ${r.status.total}`;
+  $("#qEqs").innerHTML=r.problem.equations_tex.map(e=>`<span>$$${esc(e)}$$</span>`).join(""); math($("#qEqs"));
+  $("#qAns").value=""; show(["quiz"]); $("#qAns").focus();
+}
+async function quizSubmit(){
+  $("#qErr").textContent="";
+  try{ const r=await api("/api/assess/answer",{problem_id:QID,answer:$("#qAns").value});
+    if(!r.recorded){ $("#qErr").textContent=r.message; return; } quizNext();
+  }catch(e){ $("#qErr").textContent=e.message; }
 }
 function explanation(ex){ renderBlocks($("#explain"), ex.blocks, ex.arm_label); show(["problem","explain","answerBox"]); $("#ans").value=""; $("#ans").focus(); }
 async function next(method){
@@ -150,6 +176,7 @@ async function submit(){
 }
 document.querySelectorAll("#result button").forEach(b=>b.onclick=async()=>{ const h=+b.dataset.r;
   try{ await api("/api/rate", h?{helpful:h}:{}); }catch(e){} show(["home"]); });
+$("#qSubmit").onclick=quizSubmit; $("#qAns").onkeydown=e=>{if(e.key==="Enter")quizSubmit()};
 $("#go").onclick=login; $("#code").onkeydown=e=>{if(e.key==="Enter")login()};
 $("#next").onclick=()=>next(); $("#submit").onclick=submit; $("#ans").onkeydown=e=>{if(e.key==="Enter")submit()};
 </script>

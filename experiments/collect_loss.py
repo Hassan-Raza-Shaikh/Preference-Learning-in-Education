@@ -12,7 +12,9 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOSS = os.path.join(ROOT, "data", "train", "loss")
-SCRATCH = "/private/tmp/claude-501/-Users-hassan-Projects-Preference-Learning-in-Education/b433c465-880e-4032-b765-630e3dc83987/scratchpad/loss_adapters"
+# Large adapter files go outside the repo. Override with PLE_SCRATCH=/path (A8: was a
+# hard-coded macOS session path).
+SCRATCH = os.path.join(os.environ.get("PLE_SCRATCH", os.path.join(ROOT, "..", "ple_scratch")), "loss_adapters")
 
 MODELS = {"general": "mlx-community/Qwen2.5-1.5B-Instruct-4bit",
           "math": "mlx-community/Qwen2.5-Math-1.5B-Instruct-4bit"}

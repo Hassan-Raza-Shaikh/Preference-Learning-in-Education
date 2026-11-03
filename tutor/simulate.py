@@ -178,7 +178,9 @@ def run(n_classes=20, n_learners=25, T=30, seed=20261103, design=None, scenarios
         contrasts = {}
         for a, b in [("adaptive_outcomes", "fixed_example"), ("adaptive_outcomes", "rule_by_mastery"),
                      ("adaptive_outcomes+liking", "adaptive_outcomes"), ("learner_choice", "adaptive_outcomes"),
-                     ("oracle", "adaptive_outcomes")]:
+                     ("oracle", "adaptive_outcomes"),
+                     # the two contrasts the school pilot will estimate (docs/pilot/STUDY_DESIGN.md)
+                     ("rule_by_mastery", "fixed_example"), ("learner_choice", "rule_by_mastery")]:
             d = [x - y for x, y in zip(per[a]["mastered"], per[b]["mastered"])]   # paired by class
             contrasts[f"{a} - {b}"] = {"diff": sum(d) / len(d), "ci": boot_ci(d)}
         res["scenarios"][sname] = {"params": scen, "policies": summary, "contrasts": contrasts}

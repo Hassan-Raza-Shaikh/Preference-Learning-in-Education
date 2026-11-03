@@ -1,7 +1,7 @@
 """Problem bank for the tutor, built from the verified Phase 1 worked-solution generators.
 
 Build (needs the OATutor extraction in data/oatutor_systems.jsonl):
-    python -m tutor.bank --systems data/oatutor_systems.jsonl --out tutor/data/problem_bank.json
+    python -m tutor.bank --systems data/oatutor_systems.jsonl --out tutor/data/problem_bank.json  # parser v2 (default)
 
 Guarantees, checked at build time (a problem or method is dropped if any check fails):
   1. final answer == sympy reference solution and satisfies the original system;
@@ -141,9 +141,15 @@ def features(A, b, ref):
             "max_coef": int(max(sp.ceiling(c) for c in coefs)) if coefs else 0}
 
 
-def build_problem(record, stats):
+def build_problem(record, stats, parser="v1"):
     q = record["steps"][0]["question"] if record["steps"] else ""
-    eqs = extract_system(q)
+    if parser == "v2":
+        from oatutor_extract.parse_v2 import extract_system_v2
+        stem = (record["problem"].get("title") or "") + " " + (record["problem"].get("body") or "")
+        eqs, how = extract_system_v2(q, stem)
+        stats[f"parsed_by:{how}"] += 1
+    else:
+        eqs = extract_system(q)
     if len(eqs) < 2:
         stats["skip_unparsed"] += 1
         return None
@@ -205,12 +211,12 @@ def build_problem(record, stats):
     }
 
 
-def build(systems_jsonl, out_path):
+def build(systems_jsonl, out_path, parser="v2"):
     stats = Counter()
     bank, seen = [], {}
     for line in open(systems_jsonl, encoding="utf-8"):
         rec = json.loads(line)
-        p = build_problem(rec, stats)
+        p = build_problem(rec, stats, parser)
         if p is None:
             continue
         sig = (tuple(map(tuple, p["A"])), tuple(p["b"]))
@@ -224,7 +230,7 @@ def build(systems_jsonl, out_path):
     manifest = {"problems": len(bank), "by_method": dict(sorted(by_method.items())),
                 "by_n_vars": dict(Counter(p["features"]["n_vars"] for p in bank)),
                 "stats": dict(sorted(stats.items())), "step_check_failures": failures,
-                "source_systems": os.path.relpath(systems_jsonl, ROOT)}
+                "source_systems": os.path.relpath(systems_jsonl, ROOT), "parser": parser}
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as fh:
         json.dump({"manifest": manifest, "problems": bank}, fh, ensure_ascii=False, indent=1)
@@ -247,8 +253,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--systems", default=os.path.join(ROOT, "data", "oatutor_systems.jsonl"))
     ap.add_argument("--out", default=DEFAULT_BANK)
+    ap.add_argument("--parser", choices=["v1", "v2"], default="v2",
+                    help="v2 = oatutor_extract.parse_v2 (more formats; Track A item A4)")
     a = ap.parse_args()
-    print(json.dumps(build(a.systems, a.out), indent=2))
+    print(json.dumps(build(a.systems, a.out, a.parser), indent=2))
 
 
 if __name__ == "__main__":

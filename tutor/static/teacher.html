@@ -60,22 +60,26 @@ function buildForm(c){
    `<div>${checks("System size",{"2":"2 variables","3":"3 variables"},c.n_vars.map(String))}
     <label style="margin-top:8px"><input type="checkbox" id="pickm" ${c.learner_can_pick_method?"checked":""}> Learners may pick the method</label></div>`+
    `<div><label>Weight on stated preference (0 = only results count, 1 = only what learners like)<br><input type="number" id="pw" min="0" max="1" step="0.1" value="${c.preference_weight}"></label>
+    <label style="margin-top:8px">Quiz open for learners<br><select id="quizOpen"><option value="">none</option>
+      <option value="pre" ${c.assessment_open==="pre"?"selected":""} ${c.assessment&&c.assessment.pre?"":"disabled"}>pre-test</option>
+      <option value="post" ${c.assessment_open==="post"?"selected":""} ${c.assessment&&c.assessment.post?"":"disabled"}>post-test</option></select></label>
     <label style="margin-top:8px">Mastery threshold<br><input type="number" id="thr" min="0.5" max="0.99" step="0.01" value="${c.mastery_threshold}"></label></div>`;
 }
 function readForm(){
   const g=n=>[...document.querySelectorAll(`input[data-g="${n}"]:checked`)].map(i=>i.value);
   return {skills:g("Methods to practise"),allowed_arms:g("Help types allowed"),mode:$("#mode").value,fixed_arm:$("#fixed").value,
-    n_vars:g("System size").map(Number),learner_can_pick_method:$("#pickm").checked,preference_weight:+$("#pw").value,mastery_threshold:+$("#thr").value};
+    n_vars:g("System size").map(Number),learner_can_pick_method:$("#pickm").checked,preference_weight:+$("#pw").value,mastery_threshold:+$("#thr").value,assessment_open:$("#quizOpen").value||null};
 }
 async function load(){
   const d=await (await fetch("/api/teacher")).json(); CFG=d.config;
   if(!formBuilt){buildForm(CFG);formBuilt=true;}
   const sk=d.skills;
-  let h=`<tr><th>Learner</th><th>Problems</th><th>Correct</th>${sk.map(s=>`<th>${esc(s.label)}</th>`).join("")}<th>Help: works best / liked most</th><th>Method picks</th></tr>`;
-  if(!d.learners.length) h+=`<tr><td colspan="${sk.length+5}" class="small">No learners yet.</td></tr>`;
+  let h=`<tr><th>Learner</th><th>Condition</th><th>Pre-test</th><th>Post-test</th><th>Problems</th><th>Correct</th>${sk.map(s=>`<th>${esc(s.label)}</th>`).join("")}<th>Help: works best / liked most</th><th>Method picks</th></tr>`;
+  if(!d.learners.length) h+=`<tr><td colspan="${sk.length+8}" class="small">No learners yet.</td></tr>`;
   d.learners.forEach(l=>{
     const pref=Object.entries(l.preferences).map(([b,p])=>`<div><span class="small">${b} mastery:</span> ${esc(ARMS[p.works_best]||"–")} / ${esc(ARMS[p.liked_most]||"–")}</div>`).join("")||"<span class='small'>not enough data</span>";
-    h+=`<tr><td>${esc(l.learner_id)}</td><td>${l.problems}</td><td>${l.accuracy==null?"–":Math.round(l.accuracy*100)+"%"}</td>`+
+    const sc=f=>l.assessment&&l.assessment[f]?`${l.assessment[f][0]}/${l.assessment[f][1]}`:"–";
+    h+=`<tr><td>${esc(l.learner_id)}</td><td>${esc(MODES[l.condition]?l.condition:"")}${CFG.study?` <span class="small">(${l.form_order})</span>`:""}</td><td>${sc("pre")}</td><td>${sc("post")}</td><td>${l.problems}</td><td>${l.accuracy==null?"–":Math.round(l.accuracy*100)+"%"}</td>`+
       sk.map(s=>{const v=l.mastery[s.id]??0;return `<td><span class="bar"><i style="width:${Math.round(v*100)}%"></i></span>${Math.round(v*100)}%</td>`}).join("")+
       `<td>${pref}</td><td>${Object.entries(l.method_choices).map(([m,n])=>`${esc(METHODS[m])}: ${n}`).join("<br>")||"–"}</td></tr>`;
   });

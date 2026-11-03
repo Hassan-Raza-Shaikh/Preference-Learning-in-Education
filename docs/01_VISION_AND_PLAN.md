@@ -128,11 +128,13 @@ all our verified data already lives. Expand to other subjects only after the loo
 | # | Milestone | Output | Status |
 |---|---|---|---|
 | M0 | Reframe and document everything | `docs/` (this folder), worklog | done 2026-11-03 |
-| M1 | **Explanation engine:** extend the verified generator to produce variants per problem: method × scaffolding level (full worked / hints only / check only) | `tutor/explanations.py` + tests | planned |
-| M2 | **Learner model:** per-skill mastery (BKT with OATutor's parameters) + per-learner preference over explanation variants (a bandit, e.g. Thompson sampling, rewarded by check-question success and rating) | `tutor/learner_model.py` + tests | planned |
-| M3 | **Tutor prototype:** a minimal interactive app (problem → explanation choice → check question → next problem), full interaction logging, teacher config file | `tutor/app` | planned |
-| M4 | **Simulated-learner evaluation:** synthetic learners with known preferences and skill gaps; show the system discovers their preferences and raises mastery faster than a non-adaptive baseline | results + figures | planned |
-| M5 | **School pilot package:** study design, consent/ethics documents, teacher guide, data-handling plan | `docs/pilot/` | planned |
+| M1 | **Explanation engine:** verified problem bank + help variants (worked example on a similar system / faded / method outline / none), step-level verification | `tutor/bank.py`, `tutor/explanations.py` + tests | done 2026-11-03 |
+| M2 | **Learner model:** per-skill mastery (BKT with OATutor's parameters) + per-learner preference over help types (Thompson sampling; outcome and stated-preference signals kept separate) + mastery rule | `tutor/learner_model.py` + tests | done 2026-11-03 |
+| M3 | **Tutor prototype:** web app (learner + teacher pages), exact grading, full logging, teacher configuration | `tutor/engine.py`, `tutor/app.py` | done 2026-11-03 |
+| M4 | **Simulated-learner evaluation** | `tutor/simulate.py`, `tutor/results/` | done 2026-11-03. **Negative result:** the per-learner bandit did not beat the simple mastery rule; see `04_PROOF_OF_CONCEPT.md` §5 |
+| M5 | **School pilot package:** pre/post quiz, randomisation, analysis script, study design, consent, data plan, teacher guide | `tutor/assessment.py`, `tutor/analyze_study.py`, `docs/pilot/` | drafts done 2026-11-03; need supervisor review + ethics approval |
+
+Full description of what was built and the results: [`04_PROOF_OF_CONCEPT.md`](04_PROOF_OF_CONCEPT.md).
 
 **On M4 (honesty note):** simulated learners show that the *machinery works*: preferences
 are detected and adaptation happens. They do **not** show that real children learn more.

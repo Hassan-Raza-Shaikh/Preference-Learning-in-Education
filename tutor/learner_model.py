@@ -86,13 +86,17 @@ class LearnerState:
     liking: dict = field(default_factory=_zero)
     method_choices: dict = field(default_factory=dict)   # skill -> times chosen by learner
     history: list = field(default_factory=list)          # compact per-problem records
+    assessment: dict = field(default_factory=dict)       # form -> {problem_id: correct}
+    study_arm: str | None = None                         # condition, when a study randomises learners
+    form_order: str = "AB"                               # AB: pre=form A, post=form B; BA: swapped
 
     def p(self, skill, prm: BKTParams):
         return self.mastery.get(skill, prm.p_init)
 
     def to_json(self):
         return {"learner_id": self.learner_id, "mastery": self.mastery, "efficacy": self.efficacy,
-                "liking": self.liking, "method_choices": self.method_choices, "history": self.history}
+                "liking": self.liking, "method_choices": self.method_choices, "history": self.history,
+                "assessment": self.assessment, "study_arm": self.study_arm, "form_order": self.form_order}
 
     @classmethod
     def from_json(cls, d):

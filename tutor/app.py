@@ -69,6 +69,10 @@ def make_handler(tutor: Tutor):
                     out = tutor.answer(lid, str(body.get("answer", "")))
                 elif path == "/api/rate":
                     out = tutor.rate(lid, int(body.get("helpful", 0))) if body.get("helpful") else tutor.skip_rating(lid)
+                elif path == "/api/assess/next":
+                    out = tutor.assess_next(lid)
+                elif path == "/api/assess/answer":
+                    out = tutor.assess_answer(lid, body.get("problem_id"), str(body.get("answer", "")))
                 elif path == "/api/config":
                     out = tutor.set_config(body.get("config", {}))
                 else:

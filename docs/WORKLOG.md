@@ -10,6 +10,123 @@ Each entry records **what** was done, **why**, the **result** (including failure
 
 ---
 
+## 2026-11-03 (session 2): All next phases started; tutor proof of concept built
+
+**Plain-language summary.** We built a working proof-of-concept tutor and everything a
+school pilot needs. We also worked through the Phase 1 follow-ups that don't need a GPU.
+The most important *finding*: in a simulation, the tutor's "learn what helps each pupil"
+algorithm did **not** beat a simple textbook rule (more help for beginners, less as they
+improve). The rule is now its own mode, and the pilot is designed to test whether pupils'
+*own preferences* point to what helps them. See `04_PROOF_OF_CONCEPT.md`.
+
+**What: Track B (tutor), milestones M1–M5**
+- `tutor/bank.py`: problem bank from the verified generators.
+  - New **step-level check**: every displayed equation must hold at the true solution, and
+    Cramer determinants are checked against det(A).
+  - Result: 178 systems, 5,983 equations checked, 0 failures; 1,261 matrix displays
+    unchecked by the parser.
+- `tutor/explanations.py`: four help types (worked example on a similar system, faded,
+  outline, none). Faded steps never reveal the answer (checked on every problem).
+- `tutor/grading.py`: exact grading with short diagnoses (sign, swap, one value right).
+- `tutor/learner_model.py`: BKT mastery, plus Thompson sampling with efficacy and liking
+  kept separate, plus the mastery rule.
+- `tutor/engine.py`, `tutor/app.py`, `tutor/static/`: stdlib web app (learner + teacher
+  pages).
+  - Modes: learner_choice / rule / adaptive / fixed.
+  - KaTeX is bundled locally, because the CDN was unreachable here and school networks
+    may block it too.
+  - Driven end to end in a headless browser.
+- `tutor/simulate.py`: simulated-learner check (see Findings).
+- `tutor/assessment.py`: parallel pre/post quiz forms, kept out of practice.
+  - Engine study mode: block randomisation of pupils to conditions, plus counterbalanced
+    forms.
+  - `tutor/analyze_study.py`: gains by condition and RQ3 agreement.
+- `docs/pilot/`: demo script, study design, consent/assent templates, data-management
+  plan, teacher guide (all drafts).
+
+**What: Track A (Phase 1 follow-ups)**
+- **A8 done:** scratch paths now come from `PLE_SCRATCH`.
+- **A1 part 1:** `experiments/dpo_pair_diagnostics.py`.
+- **A1 part 2:** `experiments/onpolicy_dpo.py`, written and unit-tested, **not run** (no
+  MLX here).
+- **A2:** `experiments/faithfulness.py` (structural check), and
+  `experiments/rescore_faithfulness.py` for re-scoring on the Mac plus a hand-label sample.
+- **A4:** `oatutor_extract/parse_v2.py`.
+- **A5:** `experiments/intermediate_stats.py`.
+- `docs/03_MAC_RUNBOOK.md`: exact commands for the GPU steps.
+
+**Findings (numbers copied from the runs)**
+- **Reproducibility.** OATutor upstream has changed (13,371 vs 13,287 problem folders).
+  Pinning commit `2f27a59` reproduces the Phase 1 manifests and splits byte-for-byte,
+  and both synthetic sets with identical counts. The original synthetic manifest gains 3
+  fields from the newer manifest format; that change was reverted, not committed.
+- **Display issues found.** Phase 1 worked solutions show `x=3 y=3=3` and `+1y`. Fixed for
+  the tutor only (`x=3y=3(1)=3`, `+y`), and re-verified. Phase 1 data was left unchanged.
+- **Checker bugs found and fixed during the build** (each would have hidden or invented
+  problems):
+  - `D_{x}` was parsed as a function call: 57 false failures.
+  - `x=3, y=1` was read as one chain.
+  - `2x+y=1` counted as revealing `y=1`.
+  - `x=3y=3(1)=3` was not detected as a reveal.
+- **Simulation (M4).**
+  - **Design search** on the development seed (`tutor/results/design_search.md`): of six
+    variants, D2 (rule prior) looked best.
+  - **Held-out confirmation (seed 20270101): D2 did NOT replicate.** In scenario A it was
+    worse than the rule (−0.066 [−0.093, −0.038]) and worse than the original design. Kept
+    as experimental only.
+  - **Robust results (held-out, original design):**
+
+    | contrast | result |
+    |---|---|
+    | rule − always worked example | +0.125 to +0.154, all scenarios, all CIs exclude 0 |
+    | adaptive − rule | −0.033 [−0.061, −0.006] in A; n.s. in B and C |
+    | how often adaptive picks the pupil's best help | 0.28 (chance 0.25) |
+    | learner choice − rule | +0.033 [+0.006, +0.061] when preferences are honest (B) |
+    | | −0.033 [−0.065, +0.000] when misleading (C) |
+    | | −0.091 [−0.131, −0.051] when pupils don't differ (A) |
+
+  - **Interpretation (hypothesis):** within 30 problems, right/wrong answers mostly reflect
+    prior knowledge, so they say little about which help worked.
+- **A1, DPO pairs.** 100% of pairs are separable by a surface rule: the rejected text always
+  ends "Therefore the solution is…" and the chosen ends "Solution:". The rejected shares
+  84.5% (terse) / 89.4% (worked) of its text with the start of the chosen. This is a
+  **description**, consistent with a "pair construction" explanation of the DPO failure.
+  **Not yet tested.**
+- **A2, faithfulness.** The keyword metric wrongly accepts up to 40.0% of other methods'
+  gold solutions (substitution). The structural check: recall ≥ 0.972, false-accept ≤ 0.007
+  on gold, after 3 refinement rounds on that same set. Real model outputs still need
+  hand-labelling.
+- **A4, parsing.** Parser v2 gives 178 vs 128 unique verified systems. 473 problems remain
+  unparsed: mostly word problems, determinant or matrix-arithmetic exercises, nonlinear
+  systems, inequalities, figures.
+- **A5, clean arithmetic.** Fraction-free intermediate steps: real train 0.387, matched
+  synthetic 0.398, original synthetic 0.556. The clean-arithmetic hypothesis is **not
+  supported**.
+- **Privacy issue found and fixed.** Answers were logged as raw typed text, so a child
+  could type a name. Now only parsed numbers are logged (tested).
+- **OATutor BKT parameters** are placeholders: 0.1 for all 1,238 skills.
+- **Tests:** 40/40 pass (`python -m pytest tests -q`).
+
+**Decisions**
+- The app's `adaptive` (bandit) mode is labelled experimental. The new `rule` mode is the
+  recommended tutor-chooses option.
+- Pilot arms: `fixed` (control) vs `rule` vs `learner_choice`. RQ3 asks whether stated
+  preferences track what works, the question the simulation says everything hinges on.
+- Phase 1 ML data and splits are **not** changed; parser v2 is used only by the tutor
+  bank.
+- A5 "clean-only synthetic" is dropped based on the measurement.
+
+**Next**
+- **Supervisor:** review `04_PROOF_OF_CONCEPT.md` and `docs/pilot/`; agree the pilot arms
+  and timeline.
+- **Before the school demo:** a teacher reviews `tutor/content.py` (method cards) and a
+  sample of worked solutions; then an adult dry run.
+- **On the Mac:** runbook §1 (faithfulness on real outputs + hand labels), then §2
+  (on-policy DPO), then §3 (seeds).
+- **Ethics application.**
+
+---
+
 ## 2026-11-03: Project review, reframing, documentation
 
 **What**

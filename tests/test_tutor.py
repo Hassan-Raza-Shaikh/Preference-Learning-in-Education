@@ -169,8 +169,13 @@ def test_engine_full_loop_and_logging(tutor_env):
     out = t.answer("7B-01", _correct_answer(t, "7B-01"))
     assert out["correct"] and out["mastery"][r["method"]] > 0.1
     t.rate("7B-01", 3)
-    events = [json.loads(l)["event"] for l in open(tmp / "runs" / "demo" / "events.jsonl")]
-    assert events == ["learner_created", "problem_shown", "explanation_chosen", "answer", "rating"]
+    log = [json.loads(l) for l in open(tmp / "runs" / "demo" / "events.jsonl")]
+    assert [e["event"] for e in log] == ["learner_created", "problem_shown", "explanation_chosen", "answer", "rating"]
+    assert "answer" not in log[3] and set(log[3]["answer_values"]) == set(t.by_id[log[3]["problem_id"]]["variables"])
+    t.next_problem("7B-01")
+    t.choose("7B-01", t.pending["7B-01"]["offered"][0])
+    t.answer("7B-01", "my name is Sara")                      # privacy: free text is never logged
+    assert "Sara" not in open(tmp / "runs" / "demo" / "events.jsonl").read()
     # state survives a restart
     from tutor.engine import Tutor
     t2 = Tutor(t.config_path, data_dir=str(tmp / "runs"))
@@ -219,3 +224,99 @@ def test_simulation_oracle_beats_everyone_and_is_deterministic():
     assert a == S.run_class("oracle", scen, 5, n_learners=10, T=20)
     others = [S.run_class(p, scen, 5, n_learners=10, T=20)["mastered"] for p in S.POLICIES if p != "oracle"]
     assert a["mastered"] >= max(others) - 0.05
+
+
+# ------------------------------------------------------------------ assessment (pre/post)
+def test_assessment_forms_are_parallel_and_held_out(tutor_env):
+    from tutor.assessment import build_forms
+    t, _ = tutor_env
+    forms = build_forms(t.bank, t.cfg["skills"], t.cfg["n_vars"], per_method=2)
+    pre = {i["problem_id"] for i in forms["pre"]}
+    post = {i["problem_id"] for i in forms["post"]}
+    assert len(pre) == len(post) == 2 * len(t.cfg["skills"]) and not pre & post
+    for a, b in zip(forms["pre"], forms["post"]):              # paired items: same method, similar
+        pa, pb = t.by_id[a["problem_id"]], t.by_id[b["problem_id"]]
+        assert a["method"] == b["method"]
+        assert pa["features"]["n_vars"] == pb["features"]["n_vars"]
+    t.set_config({"assessment": forms})
+    for _ in range(40):                                         # never practised on test items
+        r = t.next_problem("p1")
+        assert r["problem"]["problem_id"] not in pre | post
+        t.pending.pop("p1")
+
+
+def test_assessment_flow_hides_feedback_and_skips_learner_model(tutor_env):
+    from tutor.assessment import build_forms
+    from tutor.engine import TutorError
+    t, _ = tutor_env
+    t.set_config({"assessment": build_forms(t.bank, t.cfg["skills"], t.cfg["n_vars"], 1),
+                  "assessment_open": "pre"})
+    q = t.assess_next("s1")
+    p = t.by_id[q["problem"]["problem_id"]]
+    out = t.assess_answer("s1", p["id"], ", ".join(f"{v}={r}" for v, r in zip(p["variables"], p["reference"])))
+    assert out == {"recorded": True, "status": {"form": "pre", "answered": 1, "total": 3}}
+    assert "correct" not in out and "solution" not in out                 # no feedback in a test
+    assert t.learners["s1"].mastery == {} and t.learners["s1"].history == []
+    assert t.learners["s1"].assessment["pre"][p["id"]] is True
+    with pytest.raises(TutorError):
+        t.assess_answer("s1", p["id"], "x=0, y=0")                         # no second attempt
+    assert t.assess_answer("s1", t.assess_next("s1")["problem"]["problem_id"], "hello")["recorded"] is False
+
+
+# ------------------------------------------------------------------ study randomisation
+def test_study_block_randomisation_and_counterbalancing(tutor_env):
+    from collections import Counter
+    from tutor.assessment import build_forms
+    from tutor.engine import TutorError
+    t, _ = tutor_env
+    with pytest.raises(TutorError):
+        t.set_config({"study": {"arms": ["fixed"]}})
+    t.set_config({"study": {"arms": ["fixed", "rule", "learner_choice"], "counterbalance": True},
+                  "assessment": build_forms(t.bank, t.cfg["skills"], t.cfg["n_vars"], 1), "assessment_open": "pre"})
+    for i in range(12):                         # two full blocks of 6
+        t.start(f"s{i:02d}")
+    cells = Counter((ls.study_arm, ls.form_order) for ls in t.learners.values())
+    assert set(cells.values()) == {2} and len(cells) == 6          # perfectly balanced
+    a = next(ls for ls in t.learners.values() if ls.form_order == "AB")
+    b = next(ls for ls in t.learners.values() if ls.form_order == "BA")
+    qa = t.assess_next(a.learner_id)["problem"]["problem_id"]
+    qb = t.assess_next(b.learner_id)["problem"]["problem_id"]
+    assert qa in {i["problem_id"] for i in t.cfg["assessment"]["pre"]}
+    assert qb in {i["problem_id"] for i in t.cfg["assessment"]["post"]}  # BA takes form B first
+    fx = next(ls for ls in t.learners.values() if ls.study_arm == "fixed")
+    assert t.next_problem(fx.learner_id)["explanation"]["arm"] == t.cfg["fixed_arm"]
+
+
+def test_study_analysis_end_to_end(tutor_env):
+    """A tiny simulated pilot through the real engine, then the analysis script."""
+    from tutor.analyze_study import analyse, load
+    from tutor.assessment import build_forms
+    t, tmp = tutor_env
+    t.set_config({"study": {"arms": ["fixed", "learner_choice"], "counterbalance": True},
+                  "assessment": build_forms(t.bank, t.cfg["skills"], t.cfg["n_vars"], 1)})
+    rng = random.Random(3)
+    lids = [f"k{i}" for i in range(8)]
+
+    def quiz(form, p_right):
+        t.set_config({"assessment_open": form})
+        for lid in lids:
+            while not (q := t.assess_next(lid))["done"]:
+                p = t.by_id[q["problem"]["problem_id"]]
+                right = ", ".join(f"{v}={r}" for v, r in zip(p["variables"], p["reference"]))
+                t.assess_answer(lid, p["id"], right if rng.random() < p_right else "x=99, y=99")
+
+    quiz("pre", 0.3)
+    t.set_config({"assessment_open": None})
+    for lid in lids:
+        for _ in range(6):
+            r = t.next_problem(lid)
+            if "offered" in r:
+                t.choose(lid, r["offered"][0]["arm"])
+            t.answer(lid, _correct_answer(t, lid) if rng.random() < 0.6 else "x=99, y=99")
+            t.rate(lid, rng.choice([1, 2, 3]))
+    quiz("post", 0.7)
+    out = analyse(*load(str(tmp / "runs"), "demo"), t.cfg["mode"])
+    by = out["rq1_rq2_pre_post_by_condition"]
+    assert set(by) == {"fixed", "learner_choice"} and sum(v["n"] for v in by.values()) == 8
+    assert len(out["gain_contrasts"]) == 1
+    assert set(out["usage"]) == {"fixed", "learner_choice"}

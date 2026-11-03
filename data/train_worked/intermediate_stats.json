@@ -1,0 +1,17 @@
+{
+  "real_train": {
+    "systems": 75,
+    "clean": 29,
+    "share": 0.387
+  },
+  "multimethod_worked_synth": {
+    "systems": 691,
+    "clean": 384,
+    "share": 0.556
+  },
+  "multimethod_worked_synth_matched": {
+    "systems": 746,
+    "clean": 297,
+    "share": 0.398
+  }
+}

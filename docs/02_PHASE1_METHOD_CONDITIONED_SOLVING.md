@@ -137,16 +137,22 @@ numbers are in `data/train/ci_results.json`.
 
 ## 8. Open items (Track A backlog)
 
-| # | Item | Why |
-|---|---|---|
-| A1 | **Diagnose the DPO failure.** In `multimethod.make_rejected`, the rejected solution is the chosen solution's setup steps with the solving steps removed and a wrong conclusion appended. So pairs share most tokens, differ in length, and are not the model's own outputs (off-policy). Test: on-policy negatives (sample the SFT model, grade with sympy), an SFT loss term during DPO, higher β. | Distinguishes "model too small" from "pair construction". Needed for paper P1. |
-| A2 | Real method-faithfulness metric (does the solution perform the requested method's operations?) | Current check is keyword-based |
-| A3 | ≥3 seeds per key condition | Single-seed results; intervals ≈ ±0.1 |
-| A4 | Parse more of the 751 systems (word problems, matrix-form statements) | Only 164 used; more test systems → tighter CIs |
-| A5 | Synthetic data with clean (integer) intermediate arithmetic; vary the real:synthetic ratio | Untested hypotheses from §6 of RESULTS |
-| A6 | Choose checkpoints by sympy validation accuracy, not loss | Loss was shown to mislead |
-| A7 | Repeat at 7B when a GPU is available | Capacity question |
-| A8 | Remove the hard-coded macOS scratch paths in `experiments/run_all.py` and `collect_loss.py` (make them a CLI option / environment variable) | Reproducibility on other machines |
+| # | Item | Why | Status (2026-11-03) |
+|---|---|---|---|
+| A1 | **Diagnose the DPO failure.** In `multimethod.make_rejected`, the rejected solution is the chosen solution's setup steps with the solving steps removed and a wrong conclusion appended. So pairs share most tokens, differ in length, and are not the model's own outputs (off-policy). Test: on-policy negatives (sample the SFT model, grade with sympy), an SFT loss term during DPO, higher β. | Distinguishes "model too small" from "pair construction". Needed for paper P1. | **Part 1 done:** `experiments/dpo_pair_diagnostics.py`. In 100% of pairs, one surface rule separates chosen from rejected (the rejected text always ends "Therefore the solution is…"; the chosen ends "Solution:"), and the rejected shares 84.5% (terse) / 89.4% (worked) of its text with the start of the chosen. **Part 2 ready, not run:** `experiments/onpolicy_dpo.py` (needs MLX; see `03_MAC_RUNBOOK.md` §2). |
+| A2 | Real method-faithfulness metric (does the solution perform the requested method's operations?) | Current check is keyword-based | **Built:** `experiments/faithfulness.py`. On gold solutions: recall ≥ 0.972, false-accept ≤ 0.007, vs keyword false-accept up to 0.400 (substitution). The rules were refined over 3 rounds on this same gold set, so it **must still be validated on hand-labelled model outputs** (runbook §1). |
+| A3 | ≥3 seeds per key condition | Single-seed results; intervals ≈ ±0.1 | needs MLX (runbook §3) |
+| A4 | Parse more of the 751 systems (word problems, matrix-form statements) | Only 164 used; more test systems → tighter CIs | **Done for the tutor:** `oatutor_extract/parse_v2.py` recovers plain-text, run-together, trailing-semicolon and augmented-matrix systems: 178 unique verified systems vs 128. Phase 1 ML splits deliberately **unchanged**. Remaining: word problems, which need translation into equations (idea: an LLM proposes the system, accepted only if its solution matches OATutor's stored answer). |
+| A5 | Synthetic data with clean (integer) intermediate arithmetic; vary the real:synthetic ratio | Untested hypotheses from §6 of RESULTS | **Clean-arithmetic version not supported, measured without training:** fraction-free intermediate steps in 38.7% of real train systems vs 39.8% of matched synthetic (and 55.6% of the original synthetic, which hurt more). `experiments/intermediate_stats.py`. Ratio experiment still open. |
+| A6 | Choose checkpoints by sympy validation accuracy, not loss | Loss was shown to mislead | needs MLX (runbook §4) |
+| A7 | Repeat at 7B when a GPU is available | Capacity question | needs GPU |
+| A8 | Remove the hard-coded macOS scratch paths in `experiments/run_all.py` and `collect_loss.py` (make them a CLI option / environment variable) | Reproducibility on other machines | **Done:** `PLE_SCRATCH` environment variable (default `../ple_scratch`) |
+
+Steps that need the Apple Silicon machine are collected in [`03_MAC_RUNBOOK.md`](03_MAC_RUNBOOK.md).
+
+*Reproducibility note (2026-11-03):* upstream OATutor-Content has changed since Phase 1
+(13,371 problem folders at commit `1925dec` vs 13,287). Regenerating from the pinned
+commit `2f27a59` reproduces the Phase 1 manifests and the train/valid/test split exactly.
 
 ---
 

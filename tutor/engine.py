@@ -12,6 +12,10 @@ Modes (teacher config `mode`):
                   beat `rule` in simulation)
   fixed           always `fixed_arm`: the NON-ADAPTIVE CONTROL condition for a study
 
+Study mode (config `study`): {"arms": ["fixed", "rule", "learner_choice"], "counterbalance": true}
+randomises each NEW learner to one of the arms (block randomisation, so arms stay balanced
+as learners join) and, with counterbalancing, half of each arm takes form B as the pre-test.
+
 Everything is logged to <data_dir>/<class_id>/events.jsonl (one JSON event per line) and
 state is saved to state.json after every change. Learners are identified only by a
 pseudonymous code; no names or other personal data are stored.
@@ -65,6 +69,17 @@ def validate_config(cfg: dict) -> dict:
             raise TutorError(f"{k} must be between 0 and 1")
     if not 0.5 <= float(c["mastery_threshold"]) < 1:
         raise TutorError("mastery_threshold must be in [0.5, 1)")
+    if c.get("assessment_open") not in (None, "pre", "post"):
+        raise TutorError("assessment_open must be null, 'pre' or 'post'")
+    if c.get("assessment_open") and not c.get("assessment", {}).get(c["assessment_open"]):
+        raise TutorError("no assessment form built yet: run python -m tutor.assessment")
+    study = c.get("study")
+    if study:
+        arms = study.get("arms") or []
+        if len(arms) < 2 or any(a not in MODES for a in arms) or len(set(arms)) != len(arms):
+            raise TutorError(f"study.arms must list at least two different modes from {MODES}")
+        if "learner_choice" in arms and len(c["allowed_arms"]) < 2:
+            raise TutorError("learner_choice needs at least two allowed explanation types")
     return c
 
 
@@ -82,6 +97,7 @@ class Tutor:
         self.learners: dict[str, LearnerState] = {}
         self.pending: dict[str, dict] = {}
         self.cls = ClassStats()
+        self.study_state = {"block": [], "assigned": 0}
         self._load()
 
     # ------------------------------------------------------------------ persistence
@@ -95,18 +111,19 @@ class Tutor:
             self.cls = ClassStats.from_json(d["class"])
             self.learners = {k: LearnerState.from_json(v) for k, v in d["learners"].items()}
             self.pending = d.get("pending", {})
+            self.study_state = d.get("study_state", self.study_state)
 
     def _save(self):
         tmp = self.state_path + ".tmp"
         with open(tmp, "w") as fh:
             json.dump({"class": self.cls.to_json(),
                        "learners": {k: v.to_json() for k, v in self.learners.items()},
-                       "pending": self.pending}, fh)
+                       "pending": self.pending, "study_state": self.study_state}, fh)
         os.replace(tmp, self.state_path)
 
-    def log(self, event: str, **kw):
+    def log(self, event: str, mode=None, **kw):
         rec = {"t": round(time.time(), 3), "event": event, "class_id": self.cfg["class_id"],
-               "mode": self.cfg["mode"], **kw}
+               "mode": mode or self.cfg["mode"], **kw}
         with open(os.path.join(self.dir, "events.jsonl"), "a") as fh:
             fh.write(json.dumps(rec) + "\n")
 
@@ -131,13 +148,38 @@ class Tutor:
         if not isinstance(lid, str) or not LEARNER_ID.match(lid):
             raise TutorError("Learner code must be 1-32 letters, digits, '-' or '_' (no names, please).")
         if lid not in self.learners:
-            self.learners[lid] = LearnerState(learner_id=lid)
-            self.log("learner_created", learner=lid)
+            ls = LearnerState(learner_id=lid)
+            self._assign(ls)
+            self.learners[lid] = ls
+            self.log("learner_created", learner=lid, mode=self.mode_for(ls),
+                     study_arm=ls.study_arm, form_order=ls.form_order)
         return self.learners[lid]
+
+    def _assign(self, ls):
+        """Block randomisation of a new learner to a study arm (and form order)."""
+        study = self.cfg.get("study")
+        if not study:
+            return
+        cb = study.get("counterbalance", True)
+        if not self.study_state["block"]:
+            block = [(a, o) for a in study["arms"] for o in (("AB", "BA") if cb else ("AB",))]
+            self.rng.shuffle(block)
+            self.study_state["block"] = block
+        ls.study_arm, ls.form_order = self.study_state["block"].pop()
+        self.study_state["assigned"] += 1
+
+    def mode_for(self, ls):
+        return ls.study_arm or self.cfg["mode"]
+
+    def assessment_ids(self):
+        forms = self.cfg.get("assessment") or {}
+        return {it["problem_id"] for f in ("pre", "post") for it in forms.get(f, [])}
 
     def _pick_problem(self, ls, skill):
         nv = set(self.cfg["n_vars"])
-        cands = [p for p in self.bank if skill in p["methods"] and p["features"]["n_vars"] in nv]
+        held_out = self.assessment_ids()          # never practise on test items
+        cands = [p for p in self.bank if skill in p["methods"] and p["features"]["n_vars"] in nv
+                 and p["id"] not in held_out]
         seen = {h["problem_id"] for h in ls.history if h["skill"] == skill}
         fresh = [p for p in cands if p["id"] not in seen]
         return self.rng.choice(fresh or cands)
@@ -157,7 +199,8 @@ class Tutor:
             return {"learner_id": lid, "mastery": self.mastery_view(ls),
                     "skills": [{"id": s, "label": LABEL[s]} for s in self.skills()],
                     "can_pick_method": self.cfg["learner_can_pick_method"],
-                    "threshold": self.cfg["mastery_threshold"], "pending": self.pending.get(lid)}
+                    "threshold": self.cfg["mastery_threshold"], "pending": self.pending.get(lid),
+                    "assessment": self._assessment_status(ls)}
 
     def next_problem(self, lid, method=None):
         with self.lock:
@@ -177,9 +220,9 @@ class Tutor:
             b = band(ls.p(skill, self.bkt))
             item = {"problem_id": p["id"], "skill": skill, "band": b, "picked_by": "learner" if method else "tutor",
                     "t_start": time.time()}
+            mode = self.mode_for(ls)
             out = {"problem": self._public_problem(p), "method": skill, "method_label": LABEL[skill],
-                   "mode": self.cfg["mode"], "mastery": self.mastery_view(ls)}
-            mode = self.cfg["mode"]
+                   "mode": mode, "mastery": self.mastery_view(ls)}
             if mode == "learner_choice":
                 offered = offer_two(ls, self.cls, b, self.policy, self.rng)
                 item["offered"] = offered
@@ -194,7 +237,7 @@ class Tutor:
                 item["arm"] = arm
                 out["explanation"] = make_variant(p, skill, arm, self.bank, salt=lid)
             self.pending[lid] = item
-            self.log("problem_shown", learner=lid, **{k: v for k, v in item.items() if k != "t_start"})
+            self.log("problem_shown", learner=lid, mode=self.mode_for(ls), **{k: v for k, v in item.items() if k != "t_start"})
             self._save()
             return out
 
@@ -210,7 +253,7 @@ class Tutor:
             record_choice(ls, self.cls, item["band"], arm, other)
             item["arm"] = arm
             p = self.by_id[item["problem_id"]]
-            self.log("explanation_chosen", learner=lid, problem_id=p["id"], skill=item["skill"],
+            self.log("explanation_chosen", learner=lid, mode=self.mode_for(ls), problem_id=p["id"], skill=item["skill"],
                      band=item["band"], chosen=arm, rejected=other)
             self._save()
             return {"explanation": make_variant(p, item["skill"], arm, self.bank, salt=lid)}
@@ -225,6 +268,7 @@ class Tutor:
             A, b = bank_mod.matrices(p)
             g = grade(text, p["variables"], A, b, p["reference"])
             if not g["parsed"]:
+                self.log("answer_unparsed", learner=lid, mode=self.mode_for(ls), problem_id=p["id"])
                 return {"graded": False, "message": g["message"]}
             skill, bd, arm = item["skill"], item["band"], item["arm"]
             before = ls.p(skill, self.bkt)
@@ -236,7 +280,9 @@ class Tutor:
                    "seconds": round(time.time() - item.get("t_start", time.time()), 1),
                    "picked_by": item.get("picked_by")}
             ls.history.append(rec)
-            self.log("answer", learner=lid, answer=text[:200], **rec, per_variable=g.get("per_variable"))
+            # privacy: log the parsed numbers only, never the raw typed text
+            self.log("answer", learner=lid, mode=self.mode_for(ls), answer_values=g["values"], **rec,
+                     per_variable=g.get("per_variable"))
             item["answered"] = True
             self._save()
             return {"graded": True, "correct": g["correct"], "message": g["message"],
@@ -252,7 +298,7 @@ class Tutor:
             if helpful not in (1, 2, 3):
                 raise TutorError("Rating must be 1, 2 or 3.")
             record_liking(ls, self.cls, item["band"], item["arm"], helpful >= 2, 1.0 if helpful != 2 else 0.5)
-            self.log("rating", learner=lid, problem_id=item["problem_id"], skill=item["skill"],
+            self.log("rating", learner=lid, mode=self.mode_for(ls), problem_id=item["problem_id"], skill=item["skill"],
                      band=item["band"], arm=item["arm"], helpful=helpful)
             self.pending.pop(lid, None)
             self._save()
@@ -263,6 +309,59 @@ class Tutor:
             self.pending.pop(lid, None)
             self._save()
             return {"ok": True}
+
+    # ------------------------------------------------------------------ assessment (pre/post test)
+    def _form_items(self, ls, form):
+        """Items for 'pre'/'post' for this learner; BA order swaps the two forms."""
+        forms = self.cfg.get("assessment") or {}
+        if ls.form_order == "BA":
+            form = {"pre": "post", "post": "pre"}[form]
+        return forms.get(form, [])
+
+    def _assessment_status(self, ls):
+        form = self.cfg.get("assessment_open")
+        if not form:
+            return None
+        items = self._form_items(ls, form)
+        done = ls.assessment.get(form, {})
+        return {"form": form, "answered": sum(it["problem_id"] in done for it in items), "total": len(items)}
+
+    def assess_next(self, lid):
+        with self.lock:
+            ls = self.learner(lid)
+            form = self.cfg.get("assessment_open")
+            if not form:
+                raise TutorError("No quiz is open right now.")
+            done = ls.assessment.get(form, {})
+            for it in self._form_items(ls, form):
+                if it["problem_id"] not in done:
+                    p = self.by_id[it["problem_id"]]
+                    return {"done": False, "form": form, "problem": self._public_problem(p),
+                            "method": it["method"], "method_label": LABEL[it["method"]],
+                            "status": self._assessment_status(ls)}
+            return {"done": True, "form": form, "status": self._assessment_status(ls)}
+
+    def assess_answer(self, lid, problem_id, text):
+        """Graded exactly but NOT shown to the learner, and not used to update the learner model."""
+        with self.lock:
+            ls = self.learner(lid)
+            form = self.cfg.get("assessment_open")
+            items = {it["problem_id"]: it for it in (self._form_items(ls, form) if form else [])}
+            if problem_id not in items:
+                raise TutorError("That question is not part of the open quiz.")
+            if problem_id in ls.assessment.get(form, {}):
+                raise TutorError("You have already answered this question.")
+            p = self.by_id[problem_id]
+            A, b = bank_mod.matrices(p)
+            g = grade(text, p["variables"], A, b, p["reference"])
+            if not g["parsed"]:
+                return {"recorded": False, "message": g["message"]}
+            ls.assessment.setdefault(form, {})[problem_id] = g["correct"]
+            self.log("assessment_answer", learner=lid, mode=self.mode_for(ls), form=form,
+                     form_order=ls.form_order, problem_id=problem_id,
+                     method=items[problem_id]["method"], answer_values=g["values"], correct=g["correct"])
+            self._save()
+            return {"recorded": True, "status": self._assessment_status(ls)}
 
     # ------------------------------------------------------------------ teacher
     def teacher_summary(self):
@@ -281,7 +380,9 @@ class Tutor:
                     if means or likes:
                         pref[b] = {"works_best": max(means, key=means.get) if means else None,
                                    "liked_most": max(likes, key=likes.get) if likes else None}
-                rows.append({"learner_id": lid, "problems": n, "accuracy": acc,
+                scores = {f: (sum(v.values()), len(v)) for f, v in ls.assessment.items()}
+                rows.append({"learner_id": lid, "problems": n, "accuracy": acc, "assessment": scores,
+                             "condition": self.mode_for(ls), "form_order": ls.form_order,
                              "mastery": self.mastery_view(ls), "preferences": pref,
                              "method_choices": ls.method_choices})
             return {"config": self.cfg, "learners": rows,

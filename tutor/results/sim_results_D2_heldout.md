@@ -21,6 +21,8 @@ Simulated learners: 20 classes x 25 learners, 30 problems each, seed 20270101. M
 | adaptive_outcomes+liking - adaptive_outcomes | +0.003 | [-0.029, +0.038] |
 | learner_choice - adaptive_outcomes | +0.007 | [-0.024, +0.036] |
 | oracle - adaptive_outcomes | +0.143 | [+0.116, +0.171] |
+| rule_by_mastery - fixed_example | +0.125 | [+0.097, +0.155] |
+| learner_choice - rule_by_mastery | -0.059 | [-0.089, -0.030] |
 
 ### B_differences_honest_preferences (sigma=0.6, rho=0.8)
 
@@ -41,6 +43,8 @@ Simulated learners: 20 classes x 25 learners, 30 problems each, seed 20270101. M
 | adaptive_outcomes+liking - adaptive_outcomes | +0.039 | [+0.011, +0.065] |
 | learner_choice - adaptive_outcomes | +0.062 | [+0.037, +0.087] |
 | oracle - adaptive_outcomes | +0.169 | [+0.142, +0.196] |
+| rule_by_mastery - fixed_example | +0.154 | [+0.119, +0.189] |
+| learner_choice - rule_by_mastery | +0.040 | [+0.014, +0.065] |
 
 ### C_differences_misleading_preferences (sigma=0.6, rho=0.0)
 
@@ -61,4 +65,6 @@ Simulated learners: 20 classes x 25 learners, 30 problems each, seed 20270101. M
 | adaptive_outcomes+liking - adaptive_outcomes | +0.005 | [-0.029, +0.040] |
 | learner_choice - adaptive_outcomes | -0.012 | [-0.042, +0.015] |
 | oracle - adaptive_outcomes | +0.169 | [+0.142, +0.196] |
+| rule_by_mastery - fixed_example | +0.154 | [+0.119, +0.189] |
+| learner_choice - rule_by_mastery | -0.034 | [-0.069, -0.001] |
 

@@ -67,6 +67,7 @@ def grade(text: str, variables: list[str], A, b, reference: list):
     per_var = {v: bool(sp.simplify(vals[v] - sp.Rational(r)) == 0)
                for v, r in zip(variables, reference)}
     out = {"parsed": True, "correct": bool(satisfies), "per_variable": per_var,
+           "values": {v: str(vals[v]) for v in variables},       # what gets logged (never raw text)
            "message": "Correct! Both equations are satisfied." if satisfies else diagnose(vec, reference, variables)}
     if not satisfies and re.search(r"\d\.\d{3,}", text):
         out["message"] += " Tip: use exact fractions such as 1/3 instead of rounded decimals."
