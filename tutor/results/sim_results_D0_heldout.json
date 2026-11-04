@@ -1,0 +1,433 @@
+{
+  "assumptions": {
+    "learning_prob_base": {
+      "0": {
+        "example": 0.3,
+        "faded": 0.18,
+        "outline": 0.08,
+        "none": 0.04
+      },
+      "1": {
+        "example": 0.12,
+        "faded": 0.25,
+        "outline": 0.22,
+        "none": 0.15
+      }
+    },
+    "p_correct_by_level": {
+      "0": 0.1,
+      "1": 0.5,
+      "2": 0.92
+    },
+    "initial_level_dist": [
+      0.6,
+      0.3,
+      0.1
+    ],
+    "skills": [
+      "substitution",
+      "elimination",
+      "graphing"
+    ],
+    "note": "Invented to encode the expertise-reversal effect qualitatively; not fitted to data. Results are conditional on these values."
+  },
+  "n_classes": 20,
+  "learners_per_class": 25,
+  "problems_per_learner": 30,
+  "seed": 20270101,
+  "design": {
+    "reward": "immediate",
+    "prior": null,
+    "class_w": 0.2
+  },
+  "scenarios": {
+    "A_no_individual_differences": {
+      "params": {
+        "sigma": 0.0,
+        "rho": 0.8
+      },
+      "policies": {
+        "fixed_example": {
+          "mastered": 0.588,
+          "mastered_ci": [
+            0.5653333333333334,
+            0.6106666666666667
+          ],
+          "gain": 1.068,
+          "accuracy": 0.5042182392766157,
+          "best_arm_rate": 0.3344894801822233
+        },
+        "random": {
+          "mastered": 0.638,
+          "mastered_ci": [
+            0.614,
+            0.6646666666666666
+          ],
+          "gain": 1.0813333333333333,
+          "accuracy": 0.4242503330299989,
+          "best_arm_rate": 0.25003763998194745
+        },
+        "rule_by_mastery": {
+          "mastered": 0.7133333333333334,
+          "mastered_ci": [
+            0.694,
+            0.734
+          ],
+          "gain": 1.192,
+          "accuracy": 0.5182539573806453,
+          "best_arm_rate": 0.5602648899856362
+        },
+        "adaptive_outcomes": {
+          "mastered": 0.6799999999999999,
+          "mastered_ci": [
+            0.6626666666666666,
+            0.7
+          ],
+          "gain": 1.1333333333333333,
+          "accuracy": 0.4442818305141575,
+          "best_arm_rate": 0.28252699633862033
+        },
+        "adaptive_outcomes+liking": {
+          "mastered": 0.6693333333333333,
+          "mastered_ci": [
+            0.6453333333333333,
+            0.6926666666666667
+          ],
+          "gain": 1.1126666666666667,
+          "accuracy": 0.4418017863877316,
+          "best_arm_rate": 0.2835523881431183
+        },
+        "learner_choice": {
+          "mastered": 0.6226666666666667,
+          "mastered_ci": [
+            0.5873333333333333,
+            0.6586666666666666
+          ],
+          "gain": 1.05,
+          "accuracy": 0.4216659592543925,
+          "best_arm_rate": 0.2522061986056117
+        },
+        "oracle": {
+          "mastered": 0.7899999999999999,
+          "mastered_ci": [
+            0.7659999999999999,
+            0.8146666666666667
+          ],
+          "gain": 1.2706666666666666,
+          "accuracy": 0.5492843056660753,
+          "best_arm_rate": 1.0
+        }
+      },
+      "contrasts": {
+        "adaptive_outcomes - fixed_example": {
+          "diff": 0.09200000000000001,
+          "ci": [
+            0.06466666666666662,
+            0.122
+          ]
+        },
+        "adaptive_outcomes - rule_by_mastery": {
+          "diff": -0.03333333333333336,
+          "ci": [
+            -0.06133333333333337,
+            -0.006000000000000066
+          ]
+        },
+        "adaptive_outcomes+liking - adaptive_outcomes": {
+          "diff": -0.010666666666666647,
+          "ci": [
+            -0.03999999999999998,
+            0.017333333333333378
+          ]
+        },
+        "learner_choice - adaptive_outcomes": {
+          "diff": -0.05733333333333333,
+          "ci": [
+            -0.096,
+            -0.01733333333333335
+          ]
+        },
+        "oracle - adaptive_outcomes": {
+          "diff": 0.11000000000000001,
+          "ci": [
+            0.07933333333333333,
+            0.13933333333333336
+          ]
+        },
+        "rule_by_mastery - fixed_example": {
+          "diff": 0.12533333333333335,
+          "ci": [
+            0.0966666666666667,
+            0.1546666666666667
+          ]
+        },
+        "learner_choice - rule_by_mastery": {
+          "diff": -0.0906666666666667,
+          "ci": [
+            -0.13133333333333339,
+            -0.051333333333333356
+          ]
+        }
+      }
+    },
+    "B_differences_honest_preferences": {
+      "params": {
+        "sigma": 0.6,
+        "rho": 0.8
+      },
+      "policies": {
+        "fixed_example": {
+          "mastered": 0.5693333333333334,
+          "mastered_ci": [
+            0.5366666666666666,
+            0.6046666666666667
+          ],
+          "gain": 1.0333333333333332,
+          "accuracy": 0.4955768032470691,
+          "best_arm_rate": 0.2602037195364919
+        },
+        "random": {
+          "mastered": 0.6893333333333334,
+          "mastered_ci": [
+            0.6613333333333333,
+            0.7186666666666667
+          ],
+          "gain": 1.134,
+          "accuracy": 0.4511357411841474,
+          "best_arm_rate": 0.24869336614162582
+        },
+        "rule_by_mastery": {
+          "mastered": 0.7233333333333334,
+          "mastered_ci": [
+            0.6946666666666667,
+            0.7526666666666666
+          ],
+          "gain": 1.1906666666666665,
+          "accuracy": 0.5135534325962468,
+          "best_arm_rate": 0.37278546667777446
+        },
+        "adaptive_outcomes": {
+          "mastered": 0.7126666666666667,
+          "mastered_ci": [
+            0.6833333333333333,
+            0.742
+          ],
+          "gain": 1.1573333333333333,
+          "accuracy": 0.4670068104954196,
+          "best_arm_rate": 0.2761591233104084
+        },
+        "adaptive_outcomes+liking": {
+          "mastered": 0.7026666666666667,
+          "mastered_ci": [
+            0.6759999999999999,
+            0.73
+          ],
+          "gain": 1.1486666666666667,
+          "accuracy": 0.46852891689070014,
+          "best_arm_rate": 0.28406932226104287
+        },
+        "learner_choice": {
+          "mastered": 0.756,
+          "mastered_ci": [
+            0.7313333333333334,
+            0.7813333333333333
+          ],
+          "gain": 1.2126666666666668,
+          "accuracy": 0.487629362152936,
+          "best_arm_rate": 0.362926284559698
+        },
+        "oracle": {
+          "mastered": 0.8699999999999999,
+          "mastered_ci": [
+            0.8493333333333334,
+            0.89
+          ],
+          "gain": 1.3493333333333335,
+          "accuracy": 0.5856008239426337,
+          "best_arm_rate": 1.0
+        }
+      },
+      "contrasts": {
+        "adaptive_outcomes - fixed_example": {
+          "diff": 0.14333333333333337,
+          "ci": [
+            0.11000000000000001,
+            0.1786666666666667
+          ]
+        },
+        "adaptive_outcomes - rule_by_mastery": {
+          "diff": -0.010666666666666663,
+          "ci": [
+            -0.042000000000000016,
+            0.02200000000000003
+          ]
+        },
+        "adaptive_outcomes+liking - adaptive_outcomes": {
+          "diff": -0.010000000000000009,
+          "ci": [
+            -0.04933333333333334,
+            0.026000000000000002
+          ]
+        },
+        "learner_choice - adaptive_outcomes": {
+          "diff": 0.04333333333333332,
+          "ci": [
+            0.018666666666666637,
+            0.06599999999999999
+          ]
+        },
+        "oracle - adaptive_outcomes": {
+          "diff": 0.15733333333333333,
+          "ci": [
+            0.12000000000000002,
+            0.1953333333333333
+          ]
+        },
+        "rule_by_mastery - fixed_example": {
+          "diff": 0.15400000000000003,
+          "ci": [
+            0.11933333333333332,
+            0.18866666666666668
+          ]
+        },
+        "learner_choice - rule_by_mastery": {
+          "diff": 0.032666666666666656,
+          "ci": [
+            0.005999999999999983,
+            0.06066666666666665
+          ]
+        }
+      }
+    },
+    "C_differences_misleading_preferences": {
+      "params": {
+        "sigma": 0.6,
+        "rho": 0.0
+      },
+      "policies": {
+        "fixed_example": {
+          "mastered": 0.5693333333333334,
+          "mastered_ci": [
+            0.5366666666666666,
+            0.6046666666666667
+          ],
+          "gain": 1.0333333333333332,
+          "accuracy": 0.4955768032470691,
+          "best_arm_rate": 0.2602037195364919
+        },
+        "random": {
+          "mastered": 0.6893333333333334,
+          "mastered_ci": [
+            0.6613333333333333,
+            0.7186666666666667
+          ],
+          "gain": 1.134,
+          "accuracy": 0.4511357411841474,
+          "best_arm_rate": 0.24869336614162582
+        },
+        "rule_by_mastery": {
+          "mastered": 0.7233333333333334,
+          "mastered_ci": [
+            0.6946666666666667,
+            0.7526666666666666
+          ],
+          "gain": 1.1906666666666665,
+          "accuracy": 0.5135534325962468,
+          "best_arm_rate": 0.37278546667777446
+        },
+        "adaptive_outcomes": {
+          "mastered": 0.7126666666666667,
+          "mastered_ci": [
+            0.6833333333333333,
+            0.742
+          ],
+          "gain": 1.1573333333333333,
+          "accuracy": 0.4670068104954196,
+          "best_arm_rate": 0.2761591233104084
+        },
+        "adaptive_outcomes+liking": {
+          "mastered": 0.6966666666666667,
+          "mastered_ci": [
+            0.6679999999999999,
+            0.7286666666666667
+          ],
+          "gain": 1.152,
+          "accuracy": 0.47291719154508555,
+          "best_arm_rate": 0.28620791633936893
+        },
+        "learner_choice": {
+          "mastered": 0.6900000000000001,
+          "mastered_ci": [
+            0.6673333333333333,
+            0.7133333333333334
+          ],
+          "gain": 1.1320000000000001,
+          "accuracy": 0.4554695080870987,
+          "best_arm_rate": 0.2443229569968155
+        },
+        "oracle": {
+          "mastered": 0.8699999999999999,
+          "mastered_ci": [
+            0.8493333333333334,
+            0.89
+          ],
+          "gain": 1.3493333333333335,
+          "accuracy": 0.5856008239426337,
+          "best_arm_rate": 1.0
+        }
+      },
+      "contrasts": {
+        "adaptive_outcomes - fixed_example": {
+          "diff": 0.14333333333333337,
+          "ci": [
+            0.11000000000000001,
+            0.1786666666666667
+          ]
+        },
+        "adaptive_outcomes - rule_by_mastery": {
+          "diff": -0.010666666666666663,
+          "ci": [
+            -0.042000000000000016,
+            0.02200000000000003
+          ]
+        },
+        "adaptive_outcomes+liking - adaptive_outcomes": {
+          "diff": -0.015999999999999997,
+          "ci": [
+            -0.04933333333333333,
+            0.017333333333333333
+          ]
+        },
+        "learner_choice - adaptive_outcomes": {
+          "diff": -0.022666666666666675,
+          "ci": [
+            -0.052666666666666674,
+            0.007333333333333303
+          ]
+        },
+        "oracle - adaptive_outcomes": {
+          "diff": 0.15733333333333333,
+          "ci": [
+            0.12000000000000002,
+            0.1953333333333333
+          ]
+        },
+        "rule_by_mastery - fixed_example": {
+          "diff": 0.15400000000000003,
+          "ci": [
+            0.11933333333333332,
+            0.18866666666666668
+          ]
+        },
+        "learner_choice - rule_by_mastery": {
+          "diff": -0.03333333333333334,
+          "ci": [
+            -0.06533333333333333,
+            2.7755575615628914e-17
+          ]
+        }
+      }
+    }
+  },
+  "design_name": "D0 immediate reward, no prior, class_w 0.2"
+}
