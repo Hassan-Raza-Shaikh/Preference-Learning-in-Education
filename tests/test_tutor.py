@@ -424,3 +424,19 @@ def test_learner_codes():
     assert make_codes("C", 120)[-1] == "C-120"
     with pytest.raises(ValueError):
         make_codes("Mr Smith", 2)
+
+
+# ------------------------------------------------------------------ sensitivity analysis
+def test_simulator_uses_custom_learning_table_and_sensitivity_cell_runs():
+    from tutor import simulate as S
+    from tutor.sensitivity import BASE_VARIANTS, cell
+    sl = S.SimLearner(random.Random(0), 0.0, 0.5, base=BASE_VARIANTS["no reversal"])
+    sl.level["substitution"] = 1
+    assert max(S.ARMS, key=lambda a: sl.p_learn("substitution", a)) == "example"     # no reversal at level 1
+    sl2 = S.SimLearner(random.Random(0), 0.0, 0.5)
+    sl2.level["substitution"] = 1
+    assert max(S.ARMS, key=lambda a: sl2.p_learn("substitution", a)) == "faded"      # default table: reversal
+    out = cell({"sigma": 0.6, "rho": 0.8}, T=5, n_classes=3, seed=1)
+    assert set(out["contrasts"]) == {"rule_by_mastery - fixed_example", "adaptive_outcomes - rule_by_mastery",
+                                     "learner_choice - rule_by_mastery", "oracle - rule_by_mastery"}
+    assert out == cell({"sigma": 0.6, "rho": 0.8}, T=5, n_classes=3, seed=1)            # deterministic

@@ -61,7 +61,8 @@ POLICIES = ["fixed_example", "random", "rule_by_mastery", "adaptive_outcomes",
 
 
 class SimLearner:
-    def __init__(self, rng: random.Random, sigma: float, rho: float):
+    def __init__(self, rng: random.Random, sigma: float, rho: float, base=None):
+        self.base = base or BASE                     # learning-probability table (sensitivity runs vary it)
         self.level = {s: rng.choices([0, 1, 2], INIT_LEVEL)[0] for s in SKILLS}
         logm = {a: rng.gauss(0, 1) for a in ARMS}
         self.mult = {a: math.exp(sigma * logm[a]) for a in ARMS}
@@ -69,7 +70,7 @@ class SimLearner:
 
     def p_learn(self, skill, arm):
         lv = self.level[skill]
-        return 0.0 if lv >= 2 else min(0.95, BASE[lv][arm] * self.mult[arm])
+        return 0.0 if lv >= 2 else min(0.95, self.base[lv][arm] * self.mult[arm])
 
     def study(self, skill, arm, rng):
         if rng.random() < self.p_learn(skill, arm):
@@ -95,7 +96,7 @@ def run_class(policy, scen, seed, n_learners=25, T=30, prm=BKTParams(), threshol
     """
     design = {**DEFAULT_DESIGN, **(design or {})}
     lrng = random.Random(seed)                         # same learners for every policy (paired)
-    learners = [SimLearner(lrng, scen["sigma"], scen["rho"]) for _ in range(n_learners)]
+    learners = [SimLearner(lrng, scen["sigma"], scen["rho"], scen.get("base")) for _ in range(n_learners)]
     rng = random.Random(seed * 7919 + POLICIES.index(policy))
     w = 0.3 if policy in ("adaptive_outcomes+liking", "learner_choice") else 0.0
     cfg = PolicyConfig(preference_weight=w, class_prior_weight=design["class_w"], prior=rule_prior(design["prior"]))

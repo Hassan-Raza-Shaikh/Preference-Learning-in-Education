@@ -296,6 +296,15 @@ we control (`tutor/simulate.py`). There were three scenarios:
   and loses otherwise. So the real question becomes RQ3, which only real pupils can answer.
 - One "improved" bandit design (D2) looked best on the development seed and **failed on
   the held-out seed**, so it was rejected (2.7).
+- **Sensitivity analysis (2026-11-04):** the same questions over 48 combinations of
+  assumptions, on a new seed, with the questions written down before running.
+  - The rule beat fixed worked examples everywhere.
+  - A deliberate can-fail check passed: with no expertise reversal, the rule *lost*, so the
+    simulator isn't rigged.
+  - The bandit only "won" where random help won too.
+  - Learner choice won only where pupils differ a lot *and* their preferences are honest.
+
+  See `docs/04_PROOF_OF_CONCEPT.md` §5b and the heatmap `tutor/results/sensitivity.png`.
 
 *Read: `docs/04_PROOF_OF_CONCEPT.md` §5. Exercise 5.5.*
 

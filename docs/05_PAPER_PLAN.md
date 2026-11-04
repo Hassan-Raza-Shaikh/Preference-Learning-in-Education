@@ -42,11 +42,12 @@ with pupils' stated preferences and outcomes kept separate.*
 | Claim | Evidence now | Missing |
 |---|---|---|
 | No wrong maths shown, by construction (step-level check, exact grading, no-reveal guarantee) | `tutor/bank.py`, tests with injected errors | Teacher content review |
-| Separating "liked" from "worked" is necessary: in simulation, learner choice wins only when preferences track efficacy (+0.033 vs −0.033 vs −0.091) | `tutor/results/sim_results_D0_heldout.md` | Sensitivity analysis over simulator parameters (σ, ρ, horizon) |
-| A per-learner bandit does not beat a mastery rule within one unit (a useful negative result, confirmed on held-out seeds) | design search + held-out results | Same sensitivity analysis |
+| Separating "liked" from "worked" is necessary: in simulation, learner choice wins only when preferences track efficacy (+0.033 vs −0.033 vs −0.091) | `tutor/results/sim_results_D0_heldout.md`; **sensitivity done 2026-11-04** (`tutor/results/sensitivity.md`): choice beats the rule only when pupils differ a lot *and* preferences track efficacy (8 of 48 cells) | Nothing for P2 |
+| A per-learner bandit does not personalise within one unit (a useful negative result) | design search + held-out results + sensitivity: never beats the rule except at σ = 1.0, where random help does equally well; best-help rate 0.26–0.28 everywhere | Nothing for P2 |
+| The rule's advantage depends on the expertise-reversal effect (can-fail check passed: with no reversal the rule loses, −0.043) | `tutor/results/sensitivity.md` Q4 | Nothing for P2 |
 | Ready for classroom studies (randomisation, counterbalanced quizzes, privacy-safe logs, teacher key, BKT fitting) | `tutor/`, `docs/pilot/` | Adult dry run; screenshots; usability notes |
 
-**Critical path:** sensitivity analysis (can be done in the cloud), then the dry run, then
+**Critical path:** ~~sensitivity analysis~~ (done 2026-11-04), then the dry run, then
 writing.
 
 ---

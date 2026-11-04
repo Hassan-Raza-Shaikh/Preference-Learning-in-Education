@@ -10,6 +10,76 @@ Each entry records **what** was done, **why**, the **result** (including failure
 
 ---
 
+## 2026-11-04 (evening): Simulation sensitivity analysis (for paper P2)
+
+**Plain-language summary.** We re-ran the simulated-pupil comparison under 48
+combinations of assumptions and 8 different "how pupils learn" tables, to see whether the
+earlier conclusions were just artefacts of our chosen numbers.
+- The fading rule's advantage held everywhere.
+- A deliberate check showed that the simulator *can* make the rule lose. It does when the
+  expertise-reversal effect is absent, so it isn't rigged.
+- The learning (bandit) tutor never really personalised. Where it looked better, random
+  help was equally good.
+- Letting pupils choose paid off only when pupils differ a lot *and* their stated
+  preferences track what helps them. The pilot must therefore measure both.
+
+**What**
+- `tutor/sensitivity.py`: the protocol (4 questions, grid, expected outcomes) written
+  before running. New seed 20271201; 20 classes × 25 pupils per cell; original adaptive
+  design D0.
+- `tutor/simulate.py`: `SimLearner` accepts an alternative learning table. The earlier
+  held-out results were re-checked and are unchanged.
+- Results: `tutor/results/sensitivity.{md,json,png}`.
+- Test: custom-table behaviour and determinism (46 tests pass).
+- Docs: `04_PROOF_OF_CONCEPT.md` §5b, `05_PAPER_PLAN.md` (P2 rows), learning guide §3.6.
+
+**Findings (copied from `tutor/results/sensitivity.md`)**
+- **Q1:** rule > always-worked-example in 48/48 cells.
+
+  | learning table | rule − fixed |
+  |---|---|
+  | default | +0.149 |
+  | weak reversal | +0.078 |
+  | 5 random perturbations | +0.113 to +0.251 |
+
+- **Q4, can-fail check:** with no expertise reversal, rule − fixed = −0.043
+  [−0.078, −0.012]. **Passed.**
+- **Q2, bandit − rule:**
+
+  | outcome | cells |
+  |---|---|
+  | better | 8 (all at σ = 1.0, T ≥ 30) |
+  | no difference | 28 |
+  | worse | 12 |
+
+  It picks the pupil's best help in 0.26–0.28 of cases (chance 0.25). The results are
+  identical across ρ, as expected, since the bandit does not use liking.
+- **Q3, choice − rule:**
+
+  | outcome | cells |
+  |---|---|
+  | better | 8 (σ = 1.0 with ρ ≥ 0.5; σ = 0.6 with ρ = 0.9 at T ≥ 30) |
+  | no difference | 18 |
+  | worse | 22 |
+
+  With ρ = −0.5 it is worse in 11 of 12 cells.
+- **Exploratory, added after seeing Q2:** at σ = 1.0, random − rule = +0.047
+  [+0.017, +0.076] (T = 30) and +0.056 [+0.028, +0.083] (T = 60); adaptive − random =
+  +0.013 and +0.004, both n.s. So the bandit's wins come from variety, not
+  personalisation.
+
+**Decisions**
+- No change to the app's defaults. `rule` stays the recommended tutor-chooses mode; the
+  bandit stays experimental.
+- Pilot analysis should estimate how much pupils differ in what helps them (σ-like
+  heterogeneity) as well as RQ3 (ρ). Both decide whether learner choice can pay off.
+
+**Next**
+- Hypothesis to test on a fresh seed: "rule + switch help type after a failure".
+- The P2 paper's remaining blockers are the adult dry run and the write-up.
+
+---
+
 ## 2026-11-04 (later): Learning guide
 
 **What:** `docs/06_LEARNING_GUIDE.md`, a guide for the project lead to learn the concepts
