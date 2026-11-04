@@ -10,6 +10,76 @@ Each entry records **what** was done, **why**, the **result** (including failure
 
 ---
 
+## 2026-11-04: Full review before merge; fixes; next steps that could be done here
+
+**Plain-language summary.** Before merging, we reviewed all the new code as if a school
+were about to use it. We found and fixed seven problems. The two most serious: anyone on
+the school network could open the teacher page, and a pupil could re-submit an answer
+after seeing the solution and have it counted. We also built the remaining next steps
+that need no GPU and no school, and wrote a concrete plan for the three papers. A new
+integrity result: every intermediate equation in all Phase 1 training data (68,309
+equations) is correct.
+
+**What**
+- **Review fixes** (details and reasons in `04_PROOF_OF_CONCEPT.md` §6b):
+  - teacher key for the teacher page and API;
+  - no second graded attempt;
+  - learner-code allow-list;
+  - stale randomisation block reset;
+  - `problem_skipped` events;
+  - the help type actually shown is logged;
+  - non-object JSON bodies return 400 instead of crashing.
+- **`tutor/fit_bkt.py`:** maximum-likelihood BKT fitting from the logs (grid search plus
+  local refinement), per skill or pooled. The engine now supports `bkt_per_skill`.
+- **`tutor/codes.py`:** generates a code sheet and stores the allow-list.
+- **`experiments/check_phase1_steps.py`:** step-level check of all Phase 1 training targets.
+- **`requirements.txt`** (pinned) and **`.github/workflows/tests.yml`** (pytest on every
+  push and PR).
+- **Docs:** `05_PAPER_PLAN.md` (new); teacher guide, data plan, study design and demo
+  script updated for the teacher key, codes and BKT fitting.
+
+**Findings**
+- **Phase 1 step check:** 0 failures in all four datasets:
+
+  | dataset | equations checked |
+  |---|---|
+  | terse | 3,087 |
+  | worked | 4,462 |
+  | original synthetic | 29,948 |
+  | matched synthetic | 30,812 |
+  | **total** | **68,309** |
+
+  Matrix-style displays the parser cannot read were left unchecked (656 / 877 / 6,509 /
+  6,070).
+- **BKT fitting needs more data than one class provides.** Recovery from simulated pupils
+  with known parameters, as the largest error over the four parameters, 5 replications each:
+
+  | answers per skill | largest error |
+  |---|---|
+  | 240 | up to 0.23 |
+  | 450 | up to 0.26 |
+  | 900 | up to 0.17 |
+  | 1,800 | up to 0.09 |
+
+  So the default minimum is 1,000 answers per skill, and single-class pilots should use
+  `--pool`.
+- **Tests:** 45/45 pass, including in a clean clone with no generated data (as CI will run
+  them).
+- **Browser check:** the teacher page refuses access without the key, and works and saves
+  with it.
+
+**Decisions**
+- The teacher key is regenerated at each start by default; set `--teacher-key` /
+  `TUTOR_TEACHER_KEY` for a fixed link.
+- Pupil impersonation (using another pupil's code) is accepted for a supervised pilot and
+  documented as a limitation in the data plan.
+
+**Next** (unchanged priorities, plus):
+- P2 sensitivity analysis of the simulation (σ, ρ, horizon). Can be done in the cloud.
+- Everything in the 2026-11-03 session 2 "Next" list.
+
+---
+
 ## 2026-11-03 (session 2): All next phases started; tutor proof of concept built
 
 **Plain-language summary.** We built a working proof-of-concept tutor and everything a

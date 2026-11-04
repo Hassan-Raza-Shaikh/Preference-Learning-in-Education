@@ -4,14 +4,19 @@ Run:   python -m tutor.app                 # http://localhost:8000  (learner)
                                            # http://localhost:8000/teacher  (teacher)
 Options: --port 8000 --config tutor/config.json --data-dir runs
 
-Intended for local demos and small supervised pilots on a trusted network. It has no
-login system; learners enter a pseudonymous code given by the teacher.
+Intended for local demos and small supervised pilots on a trusted network. Learners enter
+a pseudonymous code given by the teacher (optionally checked against `learner_codes`).
+The teacher page and its API require a TEACHER KEY (printed at start-up, or set with
+--teacher-key / TUTOR_TEACHER_KEY), so pupils on the same network cannot see other
+pupils' data or change the settings.
 """
 from __future__ import annotations
 
 import argparse
+import hmac
 import json
 import os
+import secrets
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from .engine import DEFAULT_CONFIG, DEFAULT_DATA, Tutor, TutorError
@@ -22,8 +27,15 @@ MAX_BODY = 16_384
 CTYPES = {".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2", ".html": "text/html"}
 
 
-def make_handler(tutor: Tutor):
+def make_handler(tutor: Tutor, teacher_key: str):
+    if not teacher_key:
+        raise ValueError("a teacher key is required")
+
     class Handler(BaseHTTPRequestHandler):
+        def _is_teacher(self):
+            given = self.headers.get("X-Teacher-Key", "")
+            return hmac.compare_digest(given.encode(), teacher_key.encode())
+
         def log_message(self, fmt, *args):  # quiet default access log
             pass
 
@@ -42,6 +54,8 @@ def make_handler(tutor: Tutor):
                 with open(os.path.join(STATIC, PAGES[path]), "rb") as fh:
                     return self._send(200, fh.read(), "text/html")
             if path == "/api/teacher":
+                if not self._is_teacher():
+                    return self._send(401, {"error": "teacher key required"})
                 return self._send(200, tutor.teacher_summary())
             if path.startswith("/static/"):
                 full = os.path.realpath(os.path.join(STATIC, path[len("/static/"):]))
@@ -58,6 +72,10 @@ def make_handler(tutor: Tutor):
                 return self._send(413, {"error": "request too large"})
             try:
                 body = json.loads(self.rfile.read(n) or b"{}")
+                if not isinstance(body, dict):
+                    raise ValueError("JSON object expected")
+                if path == "/api/config" and not self._is_teacher():
+                    return self._send(401, {"error": "teacher key required"})
                 lid = body.get("learner_id")
                 if path == "/api/start":
                     out = tutor.start(lid)
@@ -92,10 +110,14 @@ def main():
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--config", default=DEFAULT_CONFIG)
     ap.add_argument("--data-dir", default=DEFAULT_DATA)
+    ap.add_argument("--teacher-key", default=os.environ.get("TUTOR_TEACHER_KEY"),
+                    help="key for the teacher page (default: a new random key each start)")
     a = ap.parse_args()
+    key = a.teacher_key or secrets.token_urlsafe(9)
     tutor = Tutor(a.config, data_dir=a.data_dir)
-    srv = ThreadingHTTPServer((a.host, a.port), make_handler(tutor))
-    print(f"Tutor running: learner page http://{a.host}:{a.port}/  teacher page http://{a.host}:{a.port}/teacher")
+    srv = ThreadingHTTPServer((a.host, a.port), make_handler(tutor, key))
+    print(f"Tutor running. Learner page: http://{a.host}:{a.port}/")
+    print(f"Teacher page (keep this link private): http://{a.host}:{a.port}/teacher?key={key}")
     print(f"Logs and state: {tutor.dir}")
     try:
         srv.serve_forever()

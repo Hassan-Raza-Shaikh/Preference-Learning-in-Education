@@ -64,7 +64,7 @@ Then open `http://localhost:8000` (learner) and `/teacher`. Tests:
 python -m pytest tests -q
 ```
 
-40 pass, including deliberately injected errors that the safeguards must catch.
+45 pass, including deliberately injected errors that the safeguards must catch.
 
 ---
 
@@ -177,6 +177,29 @@ rule as its own mode.
 2. A teacher review of the method cards and a sample of solutions.
 3. A dry run with adults.
 4. Pre-registration.
+
+## 6b. Review fixes (2026-11-04)
+
+A full code review before the merge found these problems. All are fixed, each with a
+regression test.
+
+| Problem | Why it mattered | Fix |
+|---|---|---|
+| Teacher page and settings API had no access control | On the school network, any pupil could see all pupils' data, open the post-test, or change study conditions | Teacher key: private link printed at start-up; 401 without it |
+| An answer could be submitted again after the full solution was shown | The second, copied answer counted, inflating mastery and the study data | A second submission is rejected |
+| A mistyped code silently created a new pupil | Phantom pupils, and wasted randomisation slots | Optional allow-list (`python -m tutor.codes`) |
+| Changing the study arms kept the old randomisation block | Pupils could be assigned to an arm that no longer exists | The block is reset when the arms change |
+| Skipped problems were not logged | Missing data for the analysis | `problem_skipped` event |
+| When "faded" or "example" fell back to the outline, the log recorded the type that was chosen | Outcomes credited to help that was never shown | The help type actually shown is recorded |
+| A request body that was not a JSON object crashed the request | Robustness | Returns 400 |
+
+**Also added:**
+- **`tutor/fit_bkt.py`:** fits the mastery-model parameters from the logs. Recovery test:
+  parameters within 0.08 with 400 simulated pupils. A single class supports only a pooled
+  fit (`--pool`).
+- **Per-skill parameters** in the engine.
+- **Pinned `requirements.txt`, and CI** that runs the tests on every push and pull
+  request.
 
 ## 7. Next steps (Track B)
 

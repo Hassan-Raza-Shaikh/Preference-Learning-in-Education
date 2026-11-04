@@ -70,8 +70,10 @@ teaching during the pilot; it does not replace it.
 **Known measurement limits.**
 - 2 items per method per form (6 in total) is short and gives low reliability. Use more
   items for the full study.
-- The knowledge-tracing parameters are OATutor's placeholders (0.1 for everything). The
-  pilot data should be used to fit them.
+- The knowledge-tracing parameters are OATutor's placeholders (0.1 for everything).
+  `python -m tutor.fit_bkt` fits them from the logs. A single class is enough only for one
+  pooled parameter set (`--pool`). In a recovery test, per-method fits had errors up to
+  0.17–0.26 with 240–900 answers per method, falling to ≤ 0.09 at about 1,800.
 
 ## 6. Sample size (honest version)
 

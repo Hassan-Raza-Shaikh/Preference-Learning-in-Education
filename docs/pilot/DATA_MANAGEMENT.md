@@ -40,6 +40,14 @@ pre-assign codes.
 
 ## 3. Storage and access
 
+**Access control in the app.** The teacher page and its data/settings API require a
+teacher key: a private link printed at start-up. Requests without it get "401 teacher key
+required" (tested in `tests/test_tutor.py`). Pupils can only reach their own practice
+through their code.
+
+**Known limitation:** a pupil who knows another pupil's code could log in as them. This is
+acceptable for a supervised pilot; a full deployment would need proper accounts.
+
 | Stage | Where | Who |
 |---|---|---|
 | During the pilot | the laptop running the tutor (encrypted disk, password-protected account) | researcher, teacher |

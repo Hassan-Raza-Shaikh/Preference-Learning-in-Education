@@ -69,6 +69,9 @@ def validate_config(cfg: dict) -> dict:
             raise TutorError(f"{k} must be between 0 and 1")
     if not 0.5 <= float(c["mastery_threshold"]) < 1:
         raise TutorError("mastery_threshold must be in [0.5, 1)")
+    codes = c.get("learner_codes")
+    if codes is not None and (not isinstance(codes, list) or any(not LEARNER_ID.match(str(x)) for x in codes)):
+        raise TutorError("learner_codes must be a list of codes (letters, digits, '-' or '_')")
     if c.get("assessment_open") not in (None, "pre", "post"):
         raise TutorError("assessment_open must be null, 'pre' or 'post'")
     if c.get("assessment_open") and not c.get("assessment", {}).get(c["assessment_open"]):
@@ -80,6 +83,10 @@ def validate_config(cfg: dict) -> dict:
             raise TutorError(f"study.arms must list at least two different modes from {MODES}")
         if "learner_choice" in arms and len(c["allowed_arms"]) < 2:
             raise TutorError("learner_choice needs at least two allowed explanation types")
+    for skill, prm in (c.get("bkt_per_skill") or {}).items():
+        if skill not in METHODS or set(prm) != {"p_init", "p_transit", "p_slip", "p_guess"} \
+                or not all(0 < float(v) < 1 for v in prm.values()):
+            raise TutorError("bkt_per_skill must map methods to {p_init, p_transit, p_slip, p_guess} in (0, 1)")
     return c
 
 
@@ -132,6 +139,11 @@ class Tutor:
     def bkt(self):
         return BKTParams(**self.cfg["bkt"])
 
+    def bkt_for(self, skill) -> BKTParams:
+        """Per-skill parameters fitted from data (tutor/fit_bkt.py), else the class default."""
+        fitted = (self.cfg.get("bkt_per_skill") or {}).get(skill)
+        return BKTParams(**fitted) if fitted else self.bkt
+
     @property
     def policy(self):
         return PolicyConfig(preference_weight=self.cfg["preference_weight"],
@@ -148,6 +160,10 @@ class Tutor:
         if not isinstance(lid, str) or not LEARNER_ID.match(lid):
             raise TutorError("Learner code must be 1-32 letters, digits, '-' or '_' (no names, please).")
         if lid not in self.learners:
+            codes = self.cfg.get("learner_codes")
+            if codes is not None and lid not in codes:
+                # a typo must not silently create a new pupil (and use a randomisation slot)
+                raise TutorError("Unknown learner code. Please check it with your teacher.")
             ls = LearnerState(learner_id=lid)
             self._assign(ls)
             self.learners[lid] = ls
@@ -189,7 +205,7 @@ class Tutor:
                 "source": {k: p["source"][k] for k in ("course", "lesson", "oer", "oer_url", "license", "license_url")}}
 
     def mastery_view(self, ls):
-        return {s: round(ls.p(s, self.bkt), 3) for s in self.skills()}
+        return {s: round(ls.p(s, self.bkt_for(s)), 3) for s in self.skills()}
 
     # ------------------------------------------------------------------ API
     def start(self, lid):
@@ -212,12 +228,16 @@ class Tutor:
                 skill = method
                 ls.method_choices[skill] = ls.method_choices.get(skill, 0) + 1
             else:
-                skill = next_skill(ls, skills, self.bkt, self.cfg["mastery_threshold"], self.rng)
+                skill = next_skill(ls, skills, self.bkt_for, self.cfg["mastery_threshold"], self.rng)
                 if skill is None:
                     return {"done": True, "mastery": self.mastery_view(ls),
                             "message": "You have mastered every method your teacher selected!"}
+            old = self.pending.get(lid)
+            if old and not old.get("answered"):
+                self.log("problem_skipped", learner=lid, mode=self.mode_for(ls), problem_id=old["problem_id"],
+                         skill=old["skill"], arm=old.get("arm"))
             p = self._pick_problem(ls, skill)
-            b = band(ls.p(skill, self.bkt))
+            b = band(ls.p(skill, self.bkt_for(skill)))
             item = {"problem_id": p["id"], "skill": skill, "band": b, "picked_by": "learner" if method else "tutor",
                     "t_start": time.time()}
             mode = self.mode_for(ls)
@@ -234,8 +254,9 @@ class Tutor:
                     arm = rule_arm(b, self.cfg["allowed_arms"])
                 else:
                     arm = self.cfg["fixed_arm"]
-                item["arm"] = arm
-                out["explanation"] = make_variant(p, skill, arm, self.bank, salt=lid)
+                variant = make_variant(p, skill, arm, self.bank, salt=lid)
+                item["arm"] = variant["arm"]          # may differ from `arm` if a fallback was needed
+                out["explanation"] = variant
             self.pending[lid] = item
             self.log("problem_shown", learner=lid, mode=self.mode_for(ls), **{k: v for k, v in item.items() if k != "t_start"})
             self._save()
@@ -251,12 +272,13 @@ class Tutor:
                 raise TutorError("Please pick one of the offered explanations.")
             other = [a for a in item["offered"] if a != arm][0]
             record_choice(ls, self.cls, item["band"], arm, other)
-            item["arm"] = arm
             p = self.by_id[item["problem_id"]]
+            variant = make_variant(p, item["skill"], arm, self.bank, salt=lid)
+            item["arm"] = variant["arm"]              # outcome is credited to what was actually shown
             self.log("explanation_chosen", learner=lid, mode=self.mode_for(ls), problem_id=p["id"], skill=item["skill"],
-                     band=item["band"], chosen=arm, rejected=other)
+                     band=item["band"], chosen=arm, rejected=other, shown=variant["arm"])
             self._save()
-            return {"explanation": make_variant(p, item["skill"], arm, self.bank, salt=lid)}
+            return {"explanation": variant}
 
     def answer(self, lid, text):
         with self.lock:
@@ -264,6 +286,9 @@ class Tutor:
             item = self.pending.get(lid)
             if not item or "arm" not in item:
                 raise TutorError("Choose an explanation first.")
+            if item.get("answered"):
+                # the full solution has been shown; a second submission must not count
+                raise TutorError("You have already answered this problem.")
             p = self.by_id[item["problem_id"]]
             A, b = bank_mod.matrices(p)
             g = grade(text, p["variables"], A, b, p["reference"])
@@ -271,8 +296,9 @@ class Tutor:
                 self.log("answer_unparsed", learner=lid, mode=self.mode_for(ls), problem_id=p["id"])
                 return {"graded": False, "message": g["message"]}
             skill, bd, arm = item["skill"], item["band"], item["arm"]
-            before = ls.p(skill, self.bkt)
-            ls.mastery[skill] = bkt_update(before, g["correct"], self.bkt)
+            prm = self.bkt_for(skill)
+            before = ls.p(skill, prm)
+            ls.mastery[skill] = bkt_update(before, g["correct"], prm)
             record_outcome(ls, self.cls, bd, arm, g["correct"])
             rec = {"problem_id": p["id"], "skill": skill, "band": bd, "arm": arm,
                    "correct": g["correct"], "mastery_before": round(before, 4),
@@ -391,6 +417,8 @@ class Tutor:
     def set_config(self, new: dict):
         with self.lock:
             merged = validate_config({**self.cfg, **new, "class_id": self.cfg["class_id"]})
+            if merged.get("study") != self.cfg.get("study"):
+                self.study_state["block"] = []     # new arms: start a fresh randomisation block
             self.cfg = merged
             with open(self.config_path, "w") as fh:
                 json.dump(merged, fh, indent=2)

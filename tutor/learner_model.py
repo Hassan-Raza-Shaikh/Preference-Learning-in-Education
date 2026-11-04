@@ -192,11 +192,16 @@ def record_choice(ls, cs, b, chosen: str, rejected: str):
 # --------------------------------------------------------------------------- #
 # What to practise next
 # --------------------------------------------------------------------------- #
-def next_skill(ls: LearnerState, skills: list[str], prm: BKTParams, threshold: float,
+def next_skill(ls: LearnerState, skills: list[str], prm, threshold: float,
                rng: random.Random) -> str | None:
-    """Least-mastered enabled skill that is not yet mastered; None if all are mastered."""
-    open_ = [s for s in skills if ls.p(s, prm) < threshold]
+    """Least-mastered enabled skill that is not yet mastered; None if all are mastered.
+
+    `prm` is one BKTParams for every skill, or a function skill -> BKTParams.
+    """
+    get = prm if callable(prm) else (lambda _s: prm)
+    p = {s: ls.p(s, get(s)) for s in skills}
+    open_ = [s for s in skills if p[s] < threshold]
     if not open_:
         return None
-    low = min(ls.p(s, prm) for s in open_)
-    return rng.choice([s for s in open_ if ls.p(s, prm) == low])
+    low = min(p[s] for s in open_)
+    return rng.choice([s for s in open_ if p[s] == low])

@@ -50,6 +50,8 @@ const METHODS={substitution:"Substitution",elimination:"Elimination",graphing:"G
 const ARMS={example:"Worked example",faded:"Faded (first steps done)",outline:"Method outline",none:"No help"};
 const MODES={learner_choice:"Learner chooses the help (from two offered)",rule:"Tutor chooses by mastery (example, then faded, then outline)",adaptive:"Tutor learns what works (experimental)",fixed:"Always the same help (control group)"};
 let CFG=null, formBuilt=false;
+const KEY=new URLSearchParams(location.search).get("key")||"";
+const HDR={"X-Teacher-Key":KEY};
 function checks(name,opts,sel){return `<fieldset><legend>${name}</legend>${Object.entries(opts).map(([k,v])=>`<label><input type="checkbox" data-g="${name}" value="${k}" ${sel.includes(k)?"checked":""}> ${esc(v)}</label>`).join("")}</fieldset>`}
 function buildForm(c){
   $("#form").innerHTML=
@@ -71,7 +73,9 @@ function readForm(){
     n_vars:g("System size").map(Number),learner_can_pick_method:$("#pickm").checked,preference_weight:+$("#pw").value,mastery_threshold:+$("#thr").value,assessment_open:$("#quizOpen").value||null};
 }
 async function load(){
-  const d=await (await fetch("/api/teacher")).json(); CFG=d.config;
+  const resp=await fetch("/api/teacher",{headers:HDR});
+  if(resp.status===401){ $("#tbl").innerHTML=`<tr><td class="err">Open the teacher link printed when the tutor started (it contains the teacher key).</td></tr>`; return; }
+  const d=await resp.json(); CFG=d.config;
   if(!formBuilt){buildForm(CFG);formBuilt=true;}
   const sk=d.skills;
   let h=`<tr><th>Learner</th><th>Condition</th><th>Pre-test</th><th>Post-test</th><th>Problems</th><th>Correct</th>${sk.map(s=>`<th>${esc(s.label)}</th>`).join("")}<th>Help: works best / liked most</th><th>Method picks</th></tr>`;
@@ -87,7 +91,7 @@ async function load(){
 }
 $("#save").onclick=async()=>{
   $("#msg").textContent="";
-  const r=await fetch("/api/config",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({config:readForm()})});
+  const r=await fetch("/api/config",{method:"POST",headers:{"Content-Type":"application/json",...HDR},body:JSON.stringify({config:readForm()})});
   const j=await r.json(); $("#msg").className=r.ok?"small":"small err"; $("#msg").textContent=r.ok?"Saved.":j.error;
   if(r.ok){formBuilt=false;load();}
 };

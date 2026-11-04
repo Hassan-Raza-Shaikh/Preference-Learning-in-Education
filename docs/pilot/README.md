@@ -19,8 +19,8 @@ Before the meeting, on a laptop:
 python -m tutor.app
 ```
 
-Then open `http://localhost:8000` (learner) and `http://localhost:8000/teacher` (teacher)
-side by side.
+Then open `http://localhost:8000` (learner) and the **teacher link printed in the
+terminal** (`/teacher?key=...`) side by side.
 
 1. **Never wrong.** Solve a problem and get it wrong on purpose. The tutor grades exactly
    and gives a specific hint (for example "check the sign of x"), then shows a full worked

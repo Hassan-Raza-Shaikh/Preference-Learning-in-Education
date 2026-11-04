@@ -199,21 +199,81 @@ def test_app_serves_pages_and_blocks_traversal(tutor_env):
     from http.server import ThreadingHTTPServer
     from tutor.app import make_handler
     t, _ = tutor_env
-    srv = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(t))
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(t, "s3cret"))
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     base = f"http://127.0.0.1:{srv.server_address[1]}"
+
+    def post(path, body, headers=None):
+        req = urllib.request.Request(base + path, data=body, headers={"Content-Type": "application/json", **(headers or {})})
+        try:
+            return urllib.request.urlopen(req).status
+        except urllib.error.HTTPError as e:
+            return e.code
+
+    def get(path, headers=None):
+        try:
+            return urllib.request.urlopen(urllib.request.Request(base + path, headers=headers or {})).status
+        except urllib.error.HTTPError as e:
+            return e.code
+
     try:
         assert b"Maths Tutor" in urllib.request.urlopen(base + "/").read()
-        assert urllib.request.urlopen(base + "/static/vendor/katex/katex.min.js").status == 200
-        with pytest.raises(urllib.error.HTTPError):
-            urllib.request.urlopen(base + "/static/%2e%2e/engine.py")
-        req = urllib.request.Request(base + "/api/start", data=b'{"learner_id": "bad id"}',
-                                     headers={"Content-Type": "application/json"})
-        with pytest.raises(urllib.error.HTTPError) as e:
-            urllib.request.urlopen(req)
-        assert e.value.code == 400
+        assert get("/static/vendor/katex/katex.min.js") == 200
+        assert get("/static/%2e%2e/engine.py") == 404
+        assert post("/api/start", b'{"learner_id": "bad id"}') == 400
+        assert post("/api/start", b'[1, 2]') == 400                      # non-object body: no crash
+        # teacher data and settings need the key (pupils share the network)
+        assert get("/api/teacher") == 401
+        assert get("/api/teacher", {"X-Teacher-Key": "wrong"}) == 401
+        assert get("/api/teacher", {"X-Teacher-Key": "s3cret"}) == 200
+        assert post("/api/config", b'{"config": {"mode": "fixed"}}') == 401
+        assert t.cfg["mode"] != "fixed"
+        assert post("/api/config", b'{"config": {"mode": "fixed"}}', {"X-Teacher-Key": "s3cret"}) == 200
+        assert t.cfg["mode"] == "fixed"
     finally:
         srv.shutdown()
+
+
+def test_review_fixes_double_submit_codes_skips_and_stale_block(tutor_env):
+    from tutor.engine import TutorError
+    t, tmp = tutor_env
+    # 1. a second submission after the solution is shown must not count
+    r = t.next_problem("d1")
+    t.choose("d1", r["offered"][0]["arm"])
+    t.answer("d1", "x=99, y=99")
+    with pytest.raises(TutorError):
+        t.answer("d1", _correct_answer(t, "d1"))
+    assert len(t.learners["d1"].history) == 1 and t.learners["d1"].history[0]["correct"] is False
+    # 2. skipping an unanswered problem is logged
+    t.next_problem("d1")
+    t.next_problem("d1")
+    assert any(json.loads(l)["event"] == "problem_skipped" for l in open(tmp / "runs" / "demo" / "events.jsonl"))
+    # 3. allow-list: a typo is rejected instead of creating a new pupil
+    t.set_config({"learner_codes": ["7B-01", "7B-02"]})
+    with pytest.raises(TutorError):
+        t.start("7B-0l")
+    t.start("7B-02")
+    # 4. changing the study arms starts a fresh randomisation block
+    t.set_config({"study": {"arms": ["fixed", "rule"], "counterbalance": False}})
+    t.start("7B-01")
+    t.set_config({"study": {"arms": ["rule", "learner_choice"], "counterbalance": False}})
+    assert t.study_state["block"] == []
+
+
+def test_logged_arm_is_the_help_actually_shown(tutor_env):
+    t, _ = tutor_env
+    target = None
+    for p in t.bank:                      # a problem/method whose faded view must fall back
+        for m in p["methods"]:
+            if m in t.cfg["skills"] and p["features"]["n_vars"] in t.cfg["n_vars"] and not E.faded_prefix(p, m):
+                target = (p, m)
+    if target is None:
+        pytest.skip("no fallback case in the current bank")
+    p, m = target
+    t.set_config({"mode": "fixed", "fixed_arm": "faded"})
+    t.bank = [p] + [q for q in t.bank if q["id"] != p["id"] and m not in q["methods"]]   # force this problem
+    t.next_problem("f1", method=m)
+    assert t.pending["f1"]["arm"] == "outline"
 
 
 # ------------------------------------------------------------------ simulation sanity
@@ -320,3 +380,47 @@ def test_study_analysis_end_to_end(tutor_env):
     assert set(by) == {"fixed", "learner_choice"} and sum(v["n"] for v in by.values()) == 8
     assert len(out["gain_contrasts"]) == 1
     assert set(out["usage"]) == {"fixed", "learner_choice"}
+
+
+# ------------------------------------------------------------------ BKT fitting
+def _simulate_bkt(prm, n_learners, n_steps, seed):
+    rng = random.Random(seed)
+    seqs = []
+    for _ in range(n_learners):
+        known = rng.random() < prm.p_init
+        seq = []
+        for _ in range(n_steps):
+            seq.append(int(rng.random() < ((1 - prm.p_slip) if known else prm.p_guess)))
+            known = known or rng.random() < prm.p_transit
+        seqs.append(seq)
+    return seqs
+
+
+def test_bkt_fit_recovers_known_parameters():
+    """CAN-FAIL CHECK: data generated from known parameters must be fitted back closely."""
+    from tutor.fit_bkt import fit, loglik
+    for true in (L.BKTParams(0.2, 0.15, 0.1, 0.2), L.BKTParams(0.5, 0.05, 0.05, 0.3)):
+        seqs = _simulate_bkt(true, 400, 12, seed=7)
+        est, ll = fit(seqs)
+        assert ll >= loglik(seqs, true) - 1e-6                       # at least as good as the truth
+        for k in ("p_init", "p_transit", "p_slip", "p_guess"):
+            assert abs(getattr(est, k) - getattr(true, k)) < 0.08, (k, est, true)
+
+
+def test_engine_uses_per_skill_bkt(tutor_env):
+    from tutor.engine import TutorError
+    t, _ = tutor_env
+    t.set_config({"bkt_per_skill": {"elimination": {"p_init": 0.6, "p_transit": 0.1, "p_slip": 0.1, "p_guess": 0.2}}})
+    v = t.start("b1")["mastery"]
+    assert v["elimination"] == 0.6 and v["substitution"] == 0.1
+    assert t.next_problem("b1")["method"] != "elimination"          # weakest skill first
+    with pytest.raises(TutorError):
+        t.set_config({"bkt_per_skill": {"elimination": {"p_init": 1.5}}})
+
+
+def test_learner_codes():
+    from tutor.codes import make_codes
+    assert make_codes("7B", 3) == ["7B-01", "7B-02", "7B-03"]
+    assert make_codes("C", 120)[-1] == "C-120"
+    with pytest.raises(ValueError):
+        make_codes("Mr Smith", 2)

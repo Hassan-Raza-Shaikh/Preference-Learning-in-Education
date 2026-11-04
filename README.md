@@ -25,6 +25,7 @@ wrong maths**, built and studied as both a practical system and a research progr
 | [`docs/02_PHASE1_METHOD_CONDITIONED_SOLVING.md`](docs/02_PHASE1_METHOD_CONDITIONED_SOLVING.md) | Everything done in Phase 1, plus the status of each follow-up |
 | [`docs/03_MAC_RUNBOOK.md`](docs/03_MAC_RUNBOOK.md) | Track A steps that need the Apple Silicon machine |
 | [`docs/04_PROOF_OF_CONCEPT.md`](docs/04_PROOF_OF_CONCEPT.md) | The tutor: what it does, correctness guarantees, simulation results |
+| [`docs/05_PAPER_PLAN.md`](docs/05_PAPER_PLAN.md) | Three papers: what each can claim now, what is missing, critical path |
 | [`docs/pilot/`](docs/pilot/) | School pilot: demo script, study design, consent templates, data plan, teacher guide |
 | [`docs/WORKLOG.md`](docs/WORKLOG.md) | Dated log of every step from Nov 2026 on |
 | [`RESULTS.md`](RESULTS.md), [`report_supervisor.pdf`](report_supervisor.pdf) | Phase 1 results and report |
@@ -37,7 +38,8 @@ pip install sympy
 python -m tutor.app
 ```
 
-Then open http://localhost:8000 (learner) and http://localhost:8000/teacher (teacher).
+Then open http://localhost:8000 (learner) and the private teacher link printed in the
+terminal (`/teacher?key=...`).
 It works offline.
 
 ## Repository layout
@@ -48,7 +50,7 @@ tutor/             Track B: problem bank, explanations, grading, learner model, 
 oatutor_extract/   OATutor → clean JSONL; verified multi-method generators; parser v2
 experiments/       Track A: data prep, training (MLX), generation, sympy grading, CIs,
                    DPO diagnostics, structural faithfulness, on-policy DPO
-tests/             40 tests, including injected-error checks
+tests/             45 tests, including injected-error checks (CI: .github/workflows/tests.yml)
 data/              Manifests, splits, evaluation results (large JSONL are git-ignored)
 docs/              Vision, plan, Phase 1 record, runbook, proof of concept, pilot, work log
 runs/              Tutor logs and state (git-ignored: contains learner data)
@@ -57,7 +59,7 @@ runs/              Tutor logs and state (git-ignored: contains learner data)
 ## Rebuild the data
 
 ```bash
-pip install sympy numpy pytest matplotlib
+pip install -r requirements.txt
 git clone https://github.com/CAHLR/OATutor-Content.git
 git -C OATutor-Content checkout 2f27a597268ae5d1826f69083ad91cf8864a0c05
 python -m oatutor_extract.extract --content-root ./OATutor-Content --out-dir data -v
