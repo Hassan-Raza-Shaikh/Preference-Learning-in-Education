@@ -33,7 +33,7 @@ import random
 
 from .content import ARMS
 from .learner_model import (
-    RULE, rule_prior, BKTParams, ClassStats, LearnerState, PolicyConfig, arm_scores, band, bkt_update,
+    RULE, rule_prior, rule_switch_arm, BKTParams, ClassStats, LearnerState, PolicyConfig, arm_scores, band, bkt_update,
     next_skill, offer_two, record_choice, record_liking, record_outcome,
 )
 
@@ -57,7 +57,8 @@ SCENARIOS = {
     "C_differences_misleading_preferences": {"sigma": 0.6, "rho": 0.0},
 }
 POLICIES = ["fixed_example", "random", "rule_by_mastery", "adaptive_outcomes",
-            "adaptive_outcomes+liking", "learner_choice", "oracle"]
+            "adaptive_outcomes+liking", "learner_choice", "oracle",
+            "rule_switch"]   # appended last so earlier policies keep their random streams
 
 
 class SimLearner:
@@ -101,6 +102,7 @@ def run_class(policy, scen, seed, n_learners=25, T=30, prm=BKTParams(), threshol
     w = 0.3 if policy in ("adaptive_outcomes+liking", "learner_choice") else 0.0
     cfg = PolicyConfig(preference_weight=w, class_prior_weight=design["class_w"], prior=rule_prior(design["prior"]))
     last = {}                                           # (learner, skill) -> (band, arm) awaiting delayed credit
+    fails = {}                                          # (learner, skill) -> consecutive wrong answers
     cs = ClassStats()
     states = [LearnerState(learner_id=str(i)) for i in range(n_learners)]
     start = [dict(sl.level) for sl in learners]
@@ -120,6 +122,8 @@ def run_class(policy, scen, seed, n_learners=25, T=30, prm=BKTParams(), threshol
                 arm = rng.choice(ARMS)
             elif policy == "rule_by_mastery":
                 arm = RULE[b]
+            elif policy == "rule_switch":
+                arm = rule_switch_arm(b, fails.get((i, skill), 0))
             elif policy == "oracle":
                 arm = max(ARMS, key=lambda a: sl.p_learn(skill, a)) if sl.level[skill] < 2 else "none"
             elif policy == "learner_choice":
@@ -142,6 +146,7 @@ def run_class(policy, scen, seed, n_learners=25, T=30, prm=BKTParams(), threshol
                 record_outcome(ls, cs, b, arm, ok)
             if policy == "adaptive_outcomes+liking" or policy == "learner_choice":
                 record_liking(ls, cs, b, arm, sl.rates_helpful(arm, rng))
+            fails[(i, skill)] = 0 if ok else fails.get((i, skill), 0) + 1
             correct[i] += ok
             steps[i] += 1
     mastered = [sum(sl.level[s] == 2 for s in SKILLS) / len(SKILLS) for sl in learners]

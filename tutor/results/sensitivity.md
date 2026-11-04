@@ -8,6 +8,7 @@ Seed 20271201 (new), 20 classes x 25 learners per cell, original adaptive design
 - **Q2, adaptive bandit vs rule:** better in 8, no difference in 28, worse in 12. It picks the learner's best help type in 0.26–0.28 of cases (chance 0.25).
 - **Q3, learner choice vs rule:** better in 8, no difference in 18, worse in 22.
 - **Q4, can-fail check** (no expertise reversal, rule − fixed): -0.043 [-0.078, -0.012]: **PASSED** (the rule should lose here).
+- **Read with the replication section at the end.** All grid cells share one set of simulated classes. On a fresh seed, Q1 and the learner-choice pattern replicated, but the bandit's gains at sigma 1.0 and the exploratory 'random help beats the rule' result did **not**.
 
 ## Learner choice − rule
 
@@ -117,3 +118,22 @@ Where the bandit beat the rule (sigma 1.0), is it personalising or just varying 
 |---|---|---|
 | sigma=1.0, T=30 | +0.013 [-0.015, +0.042] | +0.047 [+0.017, +0.076] |
 | sigma=1.0, T=60 | +0.004 [-0.023, +0.030] | +0.056 [+0.028, +0.083] |
+
+## Replication on a fresh seed (20280101)
+
+The grid's cells share one set of simulated classes, so they are not independent. These key cells were re-run with new classes. `+`/`-` = 95% CI excludes 0.
+
+| cell | rule − fixed | adaptive − rule | random − rule | choice − rule |
+|---|---|---|---|---|
+| sigma=0.0, rho=0.9, T=30 | +0.142 + | -0.095 - | -0.086 - | -0.071 - |
+| sigma=0.6, rho=-0.5, T=30 | +0.139 + | -0.014 0 | -0.061 - | -0.142 - |
+| sigma=0.6, rho=0.9, T=30 | +0.139 + | -0.014 0 | -0.061 - | +0.057 + |
+| sigma=1.0, rho=-0.5, T=30 | +0.189 + | -0.011 0 | -0.030 0 | -0.123 - |
+| sigma=1.0, rho=0.5, T=30 | +0.189 + | -0.011 0 | -0.030 0 | +0.006 0 |
+| sigma=1.0, rho=0.9, T=30 | +0.189 + | -0.011 0 | -0.030 0 | +0.069 + |
+| sigma=0.0, rho=0.9, T=60 | +0.145 + | -0.033 - | -0.020 0 | -0.023 0 |
+| sigma=0.6, rho=-0.5, T=60 | +0.145 + | +0.018 0 | -0.015 0 | -0.090 - |
+| sigma=0.6, rho=0.9, T=60 | +0.145 + | +0.018 0 | -0.015 0 | +0.067 + |
+| sigma=1.0, rho=-0.5, T=60 | +0.191 + | +0.001 0 | -0.011 0 | -0.081 - |
+| sigma=1.0, rho=0.5, T=60 | +0.191 + | +0.001 0 | -0.011 0 | +0.018 0 |
+| sigma=1.0, rho=0.9, T=60 | +0.191 + | +0.001 0 | -0.011 0 | +0.079 + |

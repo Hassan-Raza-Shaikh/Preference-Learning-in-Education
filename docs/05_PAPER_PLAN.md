@@ -42,9 +42,10 @@ with pupils' stated preferences and outcomes kept separate.*
 | Claim | Evidence now | Missing |
 |---|---|---|
 | No wrong maths shown, by construction (step-level check, exact grading, no-reveal guarantee) | `tutor/bank.py`, tests with injected errors | Teacher content review |
-| Separating "liked" from "worked" is necessary: in simulation, learner choice wins only when preferences track efficacy (+0.033 vs −0.033 vs −0.091) | `tutor/results/sim_results_D0_heldout.md`; **sensitivity done 2026-11-04** (`tutor/results/sensitivity.md`): choice beats the rule only when pupils differ a lot *and* preferences track efficacy (8 of 48 cells) | Nothing for P2 |
-| A per-learner bandit does not personalise within one unit (a useful negative result) | design search + held-out results + sensitivity: never beats the rule except at σ = 1.0, where random help does equally well; best-help rate 0.26–0.28 everywhere | Nothing for P2 |
+| Separating "liked" from "worked" is necessary: in simulation, learner choice wins only when preferences track efficacy (+0.033 vs −0.033 vs −0.091) | `tutor/results/sim_results_D0_heldout.md`; **sensitivity + fresh-seed replication done 2026-11-04** (`tutor/results/sensitivity.md`): choice beats the rule only when pupils differ (σ ≥ 0.6) *and* preferences strongly track efficacy (ρ = 0.9); misleading preferences reliably hurt | Nothing for P2 |
+| A per-learner bandit does not personalise within one unit (a useful negative result) | design search + held-out results + sensitivity: apparent gains at σ = 1.0 on one seed **did not replicate** on a fresh seed; best-help rate 0.26–0.28 everywhere | Nothing for P2 |
 | The rule's advantage depends on the expertise-reversal effect (can-fail check passed: with no reversal the rule loses, −0.043) | `tutor/results/sensitivity.md` Q4 | Nothing for P2 |
+| Methods point: one-seed grids are one draw of classes; two of our results (bandit gains, random-help gains) failed fresh-seed replication; a pre-registered "rule + switch" variant failed | `tutor/results/sensitivity.md` (replication), `tutor/results/switch_rule.md` | Nothing for P2 |
 | Ready for classroom studies (randomisation, counterbalanced quizzes, privacy-safe logs, teacher key, BKT fitting) | `tutor/`, `docs/pilot/` | Adult dry run; screenshots; usability notes |
 
 **Critical path:** ~~sensitivity analysis~~ (done 2026-11-04), then the dry run, then

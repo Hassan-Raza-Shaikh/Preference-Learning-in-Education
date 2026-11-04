@@ -440,3 +440,13 @@ def test_simulator_uses_custom_learning_table_and_sensitivity_cell_runs():
     assert set(out["contrasts"]) == {"rule_by_mastery - fixed_example", "adaptive_outcomes - rule_by_mastery",
                                      "learner_choice - rule_by_mastery", "oracle - rule_by_mastery"}
     assert out == cell({"sigma": 0.6, "rho": 0.8}, T=5, n_classes=3, seed=1)            # deterministic
+
+
+def test_rule_switch_policy():
+    from tutor.learner_model import rule_switch_arm
+    assert [rule_switch_arm("low", k) for k in range(5)] == ["example", "faded", "outline", "none", "example"]
+    assert [rule_switch_arm("high", k) for k in range(2)] == ["outline", "faded"]
+    assert rule_switch_arm("low", 1, allowed=("example", "outline")) == "outline"
+    from tutor import simulate as S
+    r = S.run_class("rule_switch", S.SCENARIOS["B_differences_honest_preferences"], 3, n_learners=5, T=8)
+    assert 0 <= r["mastered"] <= 1

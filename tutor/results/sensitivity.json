@@ -2902,5 +2902,415 @@
     ]
    }
   }
+ },
+ "replication_fresh_seed": {
+  "sigma=0.0, rho=0.9, T=30": {
+   "rule_by_mastery - fixed_example": {
+    "diff": 0.142,
+    "ci": [
+     0.11,
+     0.1767
+    ],
+    "sig": "+"
+   },
+   "adaptive_outcomes - rule_by_mastery": {
+    "diff": -0.0947,
+    "ci": [
+     -0.1213,
+     -0.0693
+    ],
+    "sig": "-"
+   },
+   "random - rule_by_mastery": {
+    "diff": -0.086,
+    "ci": [
+     -0.112,
+     -0.0613
+    ],
+    "sig": "-"
+   },
+   "learner_choice - rule_by_mastery": {
+    "diff": -0.0713,
+    "ci": [
+     -0.1013,
+     -0.04
+    ],
+    "sig": "-"
+   }
+  },
+  "sigma=0.6, rho=-0.5, T=30": {
+   "rule_by_mastery - fixed_example": {
+    "diff": 0.1387,
+    "ci": [
+     0.1,
+     0.1767
+    ],
+    "sig": "+"
+   },
+   "adaptive_outcomes - rule_by_mastery": {
+    "diff": -0.014,
+    "ci": [
+     -0.042,
+     0.0153
+    ],
+    "sig": "0"
+   },
+   "random - rule_by_mastery": {
+    "diff": -0.0607,
+    "ci": [
+     -0.0907,
+     -0.0307
+    ],
+    "sig": "-"
+   },
+   "learner_choice - rule_by_mastery": {
+    "diff": -0.142,
+    "ci": [
+     -0.1653,
+     -0.12
+    ],
+    "sig": "-"
+   }
+  },
+  "sigma=0.6, rho=0.9, T=30": {
+   "rule_by_mastery - fixed_example": {
+    "diff": 0.1387,
+    "ci": [
+     0.1,
+     0.1767
+    ],
+    "sig": "+"
+   },
+   "adaptive_outcomes - rule_by_mastery": {
+    "diff": -0.014,
+    "ci": [
+     -0.042,
+     0.0153
+    ],
+    "sig": "0"
+   },
+   "random - rule_by_mastery": {
+    "diff": -0.0607,
+    "ci": [
+     -0.0907,
+     -0.0307
+    ],
+    "sig": "-"
+   },
+   "learner_choice - rule_by_mastery": {
+    "diff": 0.0567,
+    "ci": [
+     0.0273,
+     0.0873
+    ],
+    "sig": "+"
+   }
+  },
+  "sigma=1.0, rho=-0.5, T=30": {
+   "rule_by_mastery - fixed_example": {
+    "diff": 0.1887,
+    "ci": [
+     0.154,
+     0.2233
+    ],
+    "sig": "+"
+   },
+   "adaptive_outcomes - rule_by_mastery": {
+    "diff": -0.0107,
+    "ci": [
+     -0.036,
+     0.0127
+    ],
+    "sig": "0"
+   },
+   "random - rule_by_mastery": {
+    "diff": -0.03,
+    "ci": [
+     -0.0647,
+     0.0047
+    ],
+    "sig": "0"
+   },
+   "learner_choice - rule_by_mastery": {
+    "diff": -0.1227,
+    "ci": [
+     -0.15,
+     -0.0953
+    ],
+    "sig": "-"
+   }
+  },
+  "sigma=1.0, rho=0.5, T=30": {
+   "rule_by_mastery - fixed_example": {
+    "diff": 0.1887,
+    "ci": [
+     0.154,
+     0.2233
+    ],
+    "sig": "+"
+   },
+   "adaptive_outcomes - rule_by_mastery": {
+    "diff": -0.0107,
+    "ci": [
+     -0.036,
+     0.0127
+    ],
+    "sig": "0"
+   },
+   "random - rule_by_mastery": {
+    "diff": -0.03,
+    "ci": [
+     -0.0647,
+     0.0047
+    ],
+    "sig": "0"
+   },
+   "learner_choice - rule_by_mastery": {
+    "diff": 0.006,
+    "ci": [
+     -0.022,
+     0.0327
+    ],
+    "sig": "0"
+   }
+  },
+  "sigma=1.0, rho=0.9, T=30": {
+   "rule_by_mastery - fixed_example": {
+    "diff": 0.1887,
+    "ci": [
+     0.154,
+     0.2233
+    ],
+    "sig": "+"
+   },
+   "adaptive_outcomes - rule_by_mastery": {
+    "diff": -0.0107,
+    "ci": [
+     -0.036,
+     0.0127
+    ],
+    "sig": "0"
+   },
+   "random - rule_by_mastery": {
+    "diff": -0.03,
+    "ci": [
+     -0.0647,
+     0.0047
+    ],
+    "sig": "0"
+   },
+   "learner_choice - rule_by_mastery": {
+    "diff": 0.0687,
+    "ci": [
+     0.044,
+     0.092
+    ],
+    "sig": "+"
+   }
+  },
+  "sigma=0.0, rho=0.9, T=60": {
+   "rule_by_mastery - fixed_example": {
+    "diff": 0.1453,
+    "ci": [
+     0.1147,
+     0.1793
+    ],
+    "sig": "+"
+   },
+   "adaptive_outcomes - rule_by_mastery": {
+    "diff": -0.0333,
+    "ci": [
+     -0.058,
+     -0.0093
+    ],
+    "sig": "-"
+   },
+   "random - rule_by_mastery": {
+    "diff": -0.02,
+    "ci": [
+     -0.044,
+     0.004
+    ],
+    "sig": "0"
+   },
+   "learner_choice - rule_by_mastery": {
+    "diff": -0.0233,
+    "ci": [
+     -0.052,
+     0.006
+    ],
+    "sig": "0"
+   }
+  },
+  "sigma=0.6, rho=-0.5, T=60": {
+   "rule_by_mastery - fixed_example": {
+    "diff": 0.1453,
+    "ci": [
+     0.104,
+     0.184
+    ],
+    "sig": "+"
+   },
+   "adaptive_outcomes - rule_by_mastery": {
+    "diff": 0.018,
+    "ci": [
+     -0.012,
+     0.0487
+    ],
+    "sig": "0"
+   },
+   "random - rule_by_mastery": {
+    "diff": -0.0153,
+    "ci": [
+     -0.0487,
+     0.0167
+    ],
+    "sig": "0"
+   },
+   "learner_choice - rule_by_mastery": {
+    "diff": -0.09,
+    "ci": [
+     -0.1133,
+     -0.0687
+    ],
+    "sig": "-"
+   }
+  },
+  "sigma=0.6, rho=0.9, T=60": {
+   "rule_by_mastery - fixed_example": {
+    "diff": 0.1453,
+    "ci": [
+     0.104,
+     0.184
+    ],
+    "sig": "+"
+   },
+   "adaptive_outcomes - rule_by_mastery": {
+    "diff": 0.018,
+    "ci": [
+     -0.012,
+     0.0487
+    ],
+    "sig": "0"
+   },
+   "random - rule_by_mastery": {
+    "diff": -0.0153,
+    "ci": [
+     -0.0487,
+     0.0167
+    ],
+    "sig": "0"
+   },
+   "learner_choice - rule_by_mastery": {
+    "diff": 0.0667,
+    "ci": [
+     0.0433,
+     0.092
+    ],
+    "sig": "+"
+   }
+  },
+  "sigma=1.0, rho=-0.5, T=60": {
+   "rule_by_mastery - fixed_example": {
+    "diff": 0.1913,
+    "ci": [
+     0.16,
+     0.2233
+    ],
+    "sig": "+"
+   },
+   "adaptive_outcomes - rule_by_mastery": {
+    "diff": 0.0013,
+    "ci": [
+     -0.0247,
+     0.026
+    ],
+    "sig": "0"
+   },
+   "random - rule_by_mastery": {
+    "diff": -0.0107,
+    "ci": [
+     -0.04,
+     0.018
+    ],
+    "sig": "0"
+   },
+   "learner_choice - rule_by_mastery": {
+    "diff": -0.0813,
+    "ci": [
+     -0.0993,
+     -0.064
+    ],
+    "sig": "-"
+   }
+  },
+  "sigma=1.0, rho=0.5, T=60": {
+   "rule_by_mastery - fixed_example": {
+    "diff": 0.1913,
+    "ci": [
+     0.16,
+     0.2233
+    ],
+    "sig": "+"
+   },
+   "adaptive_outcomes - rule_by_mastery": {
+    "diff": 0.0013,
+    "ci": [
+     -0.0247,
+     0.026
+    ],
+    "sig": "0"
+   },
+   "random - rule_by_mastery": {
+    "diff": -0.0107,
+    "ci": [
+     -0.04,
+     0.018
+    ],
+    "sig": "0"
+   },
+   "learner_choice - rule_by_mastery": {
+    "diff": 0.018,
+    "ci": [
+     -0.012,
+     0.0487
+    ],
+    "sig": "0"
+   }
+  },
+  "sigma=1.0, rho=0.9, T=60": {
+   "rule_by_mastery - fixed_example": {
+    "diff": 0.1913,
+    "ci": [
+     0.16,
+     0.2233
+    ],
+    "sig": "+"
+   },
+   "adaptive_outcomes - rule_by_mastery": {
+    "diff": 0.0013,
+    "ci": [
+     -0.0247,
+     0.026
+    ],
+    "sig": "0"
+   },
+   "random - rule_by_mastery": {
+    "diff": -0.0107,
+    "ci": [
+     -0.04,
+     0.018
+    ],
+    "sig": "0"
+   },
+   "learner_choice - rule_by_mastery": {
+    "diff": 0.0793,
+    "ci": [
+     0.0533,
+     0.1053
+    ],
+    "sig": "+"
+   }
+  }
  }
 }

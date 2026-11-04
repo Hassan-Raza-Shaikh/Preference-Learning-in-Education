@@ -301,10 +301,16 @@ we control (`tutor/simulate.py`). There were three scenarios:
   - The rule beat fixed worked examples everywhere.
   - A deliberate can-fail check passed: with no expertise reversal, the rule *lost*, so the
     simulator isn't rigged.
-  - The bandit only "won" where random help won too.
-  - Learner choice won only where pupils differ a lot *and* their preferences are honest.
+  - The bandit seemed to win when pupils differ a lot, and so did random help. **Neither
+    replicated on a fresh seed.** All 48 cells had reused the same simulated classes, so
+    those "8 winning cells" were really one lucky draw seen eight times. Both claims were
+    retracted.
+  - Learner choice won only where pupils differ *and* their preferences strongly track
+    what helps. That did replicate.
+  - An idea from the retracted result ("rule + switch help after a wrong answer") was
+    tested with criteria set in advance, and **failed**.
 
-  See `docs/04_PROOF_OF_CONCEPT.md` §5b and the heatmap `tutor/results/sensitivity.png`.
+  See `docs/04_PROOF_OF_CONCEPT.md` §5b and `tutor/results/sensitivity.md`.
 
 *Read: `docs/04_PROOF_OF_CONCEPT.md` §5. Exercise 5.5.*
 
@@ -535,6 +541,7 @@ Then write two sentences in your own words: what is known, and what is only a hy
 | **Verify, don't trust** (sympy, step checks, clean-clone tests) | Correctness can't depend on a model behaving |
 | **Pin versions and source commits** | Upstream OATutor changed; pinning made Phase 1 reproducible |
 | **Simulation shows mechanism, not learning** | Only real pupils can show that children learn more |
+| **Replicate on fresh data before reporting** | A grid of results from one seed is one draw shown many times; our bandit and random-help "wins" vanished on a fresh seed |
 | **Write it down as you go** (`WORKLOG.md`) | So you can explain every decision to your supervisor |
 
 ---

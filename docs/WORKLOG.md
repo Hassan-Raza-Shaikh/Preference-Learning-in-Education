@@ -10,7 +10,69 @@ Each entry records **what** was done, **why**, the **result** (including failure
 
 ---
 
+## 2026-11-04 (night): "Rule + switch" test failed; replication corrects the sensitivity analysis
+
+**Plain-language summary.** We tested the idea from the sensitivity analysis (switch help
+type after a wrong answer) with success criteria set in advance, on a fresh seed. It
+**failed**.
+
+While checking why, we found that two results from the evening entry **do not
+replicate** with new simulated classes:
+- the bandit beating the rule when pupils differ a lot;
+- random help beating the rule there too.
+
+Both are retracted. The main conclusions *did* replicate:
+- the mastery rule beats fixed worked examples;
+- learner choice helps only when pupils differ and their preferences strongly track
+  what helps;
+- misleading preferences hurt.
+
+**What**
+- `learner_model.rule_switch_arm` and the simulation policy `rule_switch` (appended last,
+  so earlier policies' random streams and results are unchanged; checked).
+- `tutor/switch_rule.py`: the pre-registered test, with its protocol in the docstring.
+  Results: `tutor/results/switch_rule.md`.
+- `tutor/sensitivity.py: replicate_on_fresh_seed()`: 12 key cells re-run on seed 20280101.
+  Added to `sensitivity.json/md`, with a note in the summary.
+- Docs corrected: `04_PROOF_OF_CONCEPT.md` §5b rewritten, `05_PAPER_PLAN.md`, learning
+  guide §3.6 and §6.
+- 47 tests pass (new: switch-policy test).
+
+**Findings (copied from the result files)**
+- **Rule + switch vs rule:** (a) loses when pupils are identical: −0.040 [−0.075, −0.007]
+  at T = 15 and −0.041 [−0.065, −0.013] at T = 30; (b) at σ = 1.0, +0.007 (T = 30) and
+  +0.023 (T = 60), n.s. **FAILED.** It does beat random help in 11/12 cells and fixed
+  worked examples in 12/12, but neither was a criterion.
+- **Replication (seed 20280101):**
+
+  | claim | result | verdict |
+  |---|---|---|
+  | rule − fixed | +0.139 to +0.191 in 12/12 cells | replicates |
+  | bandit − rule at σ = 1.0 | −0.011 (T = 30), +0.001 (T = 60), n.s. | **does not replicate** |
+  | random − rule at σ = 1.0 | −0.030 [−0.065, +0.005], −0.011, n.s. | **does not replicate** |
+  | choice − rule, ρ = 0.9 and σ ≥ 0.6 | +0.057 to +0.079 in 4/4 cells | replicates |
+  | choice − rule, ρ = −0.5 | worse in 4/4 cells | replicates |
+  | choice − rule, σ = 1.0 and ρ = 0.5 | +0.006, +0.018, n.s. | not robust |
+
+**Cause of the error (method lesson).** All 48 grid cells on one seed reuse the same
+simulated classes. The bandit's "8 winning cells" were one class draw, shown across 4 ρ
+values that the bandit ignores and 2 horizons. They were not 8 independent results.
+
+**Decisions**
+- `rule_switch` is **not** added to the app (pre-stated decision on failure).
+- Headline simulation claims now need a fresh-seed replication before they are reported.
+
+**Next**
+- Open the PR for the sensitivity-analysis work.
+- P2's remaining blockers: the adult dry run and the write-up.
+
+---
+
 ## 2026-11-04 (evening): Simulation sensitivity analysis (for paper P2)
+
+> **Correction (see the "night" entry above):** the Q2 bandit gains at σ = 1.0 and the
+> exploratory "random help beats the rule" result did not replicate on a fresh seed and
+> are retracted. Q1, Q4 and the learner-choice pattern stand.
 
 **Plain-language summary.** We re-ran the simulated-pupil comparison under 48
 combinations of assumptions and 8 different "how pupils learn" tables, to see whether the

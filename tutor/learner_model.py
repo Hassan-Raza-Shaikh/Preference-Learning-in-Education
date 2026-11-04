@@ -153,10 +153,22 @@ def arm_scores(ls: LearnerState, cs: ClassStats, b: str, cfg: PolicyConfig, rng:
     return out
 
 
+def switch_order(b: str, allowed=ARMS) -> list:
+    """Allowed help types ordered by closeness (in support level) to RULE's choice for band b."""
+    want = ARMS.index(RULE[b])
+    return sorted(allowed, key=lambda a: (abs(ARMS.index(a) - want), ARMS.index(a)))
+
+
 def rule_arm(b: str, allowed=ARMS) -> str:
     """RULE's help type for this mastery band, or the nearest allowed one by support level."""
-    want = ARMS.index(RULE[b])
-    return min(allowed, key=lambda a: (abs(ARMS.index(a) - want), ARMS.index(a)))
+    return switch_order(b, allowed)[0]
+
+
+def rule_switch_arm(b: str, consecutive_failures: int, allowed=ARMS) -> str:
+    """'Rule + switch': RULE's help type, moving to the next-nearest type after each
+    consecutive wrong answer on this skill (back to RULE's choice after a right answer)."""
+    order = switch_order(b, allowed)
+    return order[consecutive_failures % len(order)]
 
 
 def choose_arm(ls, cs, b, cfg, rng) -> str:

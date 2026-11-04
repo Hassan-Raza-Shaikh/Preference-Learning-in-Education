@@ -106,6 +106,35 @@ def exploratory_random_check():
     return out
 
 
+REPLICATION_SEED = 20280101   # the fresh seed of tutor/switch_rule.py
+
+
+def replicate_on_fresh_seed():
+    """Re-test the headline claims on a FRESH seed (added 2026-11-04 after the exploratory
+    'random beats the rule at sigma 1.0' result failed to replicate).
+
+    All cells of the grid above share one set of simulated classes (one seed), so they are
+    not independent replications; this re-runs the key cells with new classes.
+    """
+    pols = ["fixed_example", "random", "rule_by_mastery", "adaptive_outcomes", "learner_choice"]
+    pairs = [("rule_by_mastery", "fixed_example"), ("adaptive_outcomes", "rule_by_mastery"),
+             ("random", "rule_by_mastery"), ("learner_choice", "rule_by_mastery")]
+    cells = [(sg, rho, T) for T in (30, 60) for sg, rho in
+             ((0.0, 0.9), (0.6, -0.5), (0.6, 0.9), (1.0, -0.5), (1.0, 0.5), (1.0, 0.9))]
+    out = {}
+    for sg, rho, T in cells:
+        per = {p: [run_class(p, {"sigma": sg, "rho": rho}, REPLICATION_SEED + c, 25, T) for c in range(N_CLASSES)]
+               for p in pols}
+        row = {}
+        for a, b in pairs:
+            d = [x["mastered"] - y["mastered"] for x, y in zip(per[a], per[b])]
+            ci = boot_ci(d)
+            row[f"{a} - {b}"] = {"diff": round(sum(d) / len(d), 4), "ci": [round(c, 4) for c in ci],
+                                 "sig": "+" if ci[0] > 0 else ("-" if ci[1] < 0 else "0")}
+        out[f"sigma={sg}, rho={rho}, T={T}"] = row
+    return out
+
+
 # --------------------------------------------------------------------------- reporting
 def summarise(grid, variants):
     def count(key, sign):
@@ -151,7 +180,10 @@ def to_markdown(res):
          f"- **Q4, can-fail check** (no expertise reversal, rule − fixed): "
          f"{s['Q4_no_reversal_rule_minus_fixed']['diff']:+.3f} "
          f"[{s['Q4_no_reversal_rule_minus_fixed']['ci'][0]:+.3f}, {s['Q4_no_reversal_rule_minus_fixed']['ci'][1]:+.3f}]: "
-         f"**{'PASSED' if s['Q4_check_passed'] else 'FAILED'}** (the rule should lose here).\n"]
+         f"**{'PASSED' if s['Q4_check_passed'] else 'FAILED'}** (the rule should lose here).",
+         "- **Read with the replication section at the end.** All grid cells share one set of simulated classes. "
+         "On a fresh seed, Q1 and the learner-choice pattern replicated, but the bandit's gains at sigma 1.0 and "
+         "the exploratory 'random help beats the rule' result did **not**.\n"]
     for key, title in (("learner_choice - rule_by_mastery", "Learner choice − rule"),
                        ("adaptive_outcomes - rule_by_mastery", "Adaptive bandit − rule"),
                        ("rule_by_mastery - fixed_example", "Rule − always worked example")):
@@ -181,6 +213,15 @@ def to_markdown(res):
         a, b = v["adaptive_outcomes - random"], v["random - rule_by_mastery"]
         L.append(f"| {k.replace('|', ', ')} | {a['diff']:+.3f} [{a['ci'][0]:+.3f}, {a['ci'][1]:+.3f}] | "
                  f"{b['diff']:+.3f} [{b['ci'][0]:+.3f}, {b['ci'][1]:+.3f}] |")
+    if "replication_fresh_seed" in res:
+        L += ["", f"## Replication on a fresh seed ({REPLICATION_SEED})\n",
+              "The grid's cells share one set of simulated classes, so they are not independent. These key cells "
+              "were re-run with new classes. `+`/`-` = 95% CI excludes 0.\n",
+              "| cell | rule − fixed | adaptive − rule | random − rule | choice − rule |", "|---|---|---|---|---|"]
+        for k, v in res["replication_fresh_seed"].items():
+            g = lambda key: f"{v[key]['diff']:+.3f} {v[key]['sig']}"
+            L.append(f"| {k} | {g('rule_by_mastery - fixed_example')} | {g('adaptive_outcomes - rule_by_mastery')} | "
+                     f"{g('random - rule_by_mastery')} | {g('learner_choice - rule_by_mastery')} |")
     return "\n".join(L) + "\n"
 
 
@@ -236,6 +277,7 @@ def main():
            "grid": grid, "base_variants": variants}
     res["summary"] = summarise(grid, variants)
     res["exploratory_random_check"] = exploratory_random_check()
+    res["replication_fresh_seed"] = replicate_on_fresh_seed()
     os.makedirs(OUT, exist_ok=True)
     json.dump(res, open(os.path.join(OUT, "sensitivity.json"), "w"), indent=1)
     md = to_markdown(res)
