@@ -160,6 +160,59 @@ rule as its own mode.
   qualitatively; they were not fitted to data.
 - One curriculum unit, three methods.
 
+## 5b. Sensitivity analysis and replication (2026-11-04)
+
+*Do the §5 conclusions survive when the simulator's assumptions change, and do they
+replicate with new simulated classes?* The questions, grid and expected outcomes were
+written into `tutor/sensitivity.py` before running it.
+
+**Setup.**
+- Seed 20271201 (new).
+- 48 grid cells: individual differences σ ∈ {0, 0.3, 0.6, 1.0} × preference–efficacy
+  match ρ ∈ {−0.5, 0, 0.5, 0.9} × problems per pupil T ∈ {15, 30, 60}.
+- Plus 8 alternative learning tables.
+- **Replication:** the key cells were re-run on a fresh seed (20280101), because all
+  cells of one grid reuse the same simulated classes and so are **not independent
+  replications**. (I only noticed this when a result failed to replicate; see the work log.)
+- Results: `tutor/results/sensitivity.md` (including the replication table),
+  `sensitivity.json`, `sensitivity.png` (grid seed only).
+
+| Question | Grid (seed 20271201) | Replication (seed 20280101) | Conclusion |
+|---|---|---|---|
+| Q1: rule vs always-worked-example | Better in **48/48** cells, and in every learning table with an expertise-reversal effect (+0.078 to +0.251) | Better in **12/12** cells (+0.139 to +0.191) | **Robust** |
+| Q4: can-fail check, no expertise reversal | **Passed:** the rule loses (−0.043 [−0.078, −0.012]) | (not repeated) | The simulator isn't rigged. The rule's advantage rests on expertise reversal being real |
+| Q2: adaptive bandit vs rule | Better in 8 cells, all at σ = 1.0, T ≥ 30 (+0.060) | **Did not replicate:** −0.011 and +0.001, n.s.; worse at σ = 0 | **The bandit never reliably beats the rule.** It picks the best help 0.26–0.28 of the time (chance 0.25) |
+| Q3: learner choice vs rule | Better in 8/48 cells, all with σ ≥ 0.6 and ρ ≥ 0.5 | Better in all 4 cells with σ ≥ 0.6 and ρ = 0.9 (+0.057 to +0.079); **not** at σ = 1.0, ρ = 0.5 (n.s.); worse in all 4 cells with ρ = −0.5 | Choice pays off only when pupils differ **and** their preferences **strongly** track what helps. Misleading preferences reliably make it worse |
+
+**Retracted exploratory result.** On the grid seed I found that random help also beat the
+rule at σ = 1.0 (+0.047, +0.056) and read the bandit's gains as "variety, not
+personalisation". On the fresh seed, random help did **not** beat the rule (−0.030
+[−0.065, +0.005] and −0.011, n.s.). That result is retracted: it was added after seeing
+the data and was a property of one set of simulated classes.
+
+**Pre-registered test of "rule + switch"** (`tutor/switch_rule.py`, seed 20280101).
+- **Policy:** after each wrong answer, move to the next-nearest help type.
+- **Hypothesis:** it would keep the rule's strength when pupils are similar and gain
+  variety when they differ.
+- **Result: FAILED both criteria.** It lost to the rule when pupils are identical
+  (−0.040 and −0.041 at T = 15 and 30, both significant), and its gains when pupils differ
+  were not significant at T = 30 or 60.
+- As decided in advance, it is **not** added to the app. Its motivation was the
+  retracted random-help result, which fits the failure.
+- Results: `tutor/results/switch_rule.md`.
+
+**What this means.**
+1. **Robust:** varying support with mastery beats fixed worked examples, *provided* the
+   expertise-reversal effect holds for real pupils. That's well supported in the
+   literature, but its size here is unknown.
+2. **Robust negative result:** personalising help from right/wrong answers (the bandit) did
+   not beat the simple rule in any replicated setting.
+3. **Learner choice** pays off only if pupils differ substantially in what helps them
+   *and* their stated preferences track it strongly. Both are unknown for real pupils, so
+   the pilot should estimate both (heterogeneity and RQ3), not just compare arms.
+4. **Method lesson:** a grid of results on one seed shows *one* draw of classes many
+   times. Headline claims need a fresh seed before they are reported.
+
 ## 6. Pilot readiness (M5)
 
 - Pre/post quiz: two parallel 6-item forms, never used for practice, with no feedback

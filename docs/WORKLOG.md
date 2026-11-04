@@ -10,6 +10,138 @@ Each entry records **what** was done, **why**, the **result** (including failure
 
 ---
 
+## 2026-11-04 (night): "Rule + switch" test failed; replication corrects the sensitivity analysis
+
+**Plain-language summary.** We tested the idea from the sensitivity analysis (switch help
+type after a wrong answer) with success criteria set in advance, on a fresh seed. It
+**failed**.
+
+While checking why, we found that two results from the evening entry **do not
+replicate** with new simulated classes:
+- the bandit beating the rule when pupils differ a lot;
+- random help beating the rule there too.
+
+Both are retracted. The main conclusions *did* replicate:
+- the mastery rule beats fixed worked examples;
+- learner choice helps only when pupils differ and their preferences strongly track
+  what helps;
+- misleading preferences hurt.
+
+**What**
+- `learner_model.rule_switch_arm` and the simulation policy `rule_switch` (appended last,
+  so earlier policies' random streams and results are unchanged; checked).
+- `tutor/switch_rule.py`: the pre-registered test, with its protocol in the docstring.
+  Results: `tutor/results/switch_rule.md`.
+- `tutor/sensitivity.py: replicate_on_fresh_seed()`: 12 key cells re-run on seed 20280101.
+  Added to `sensitivity.json/md`, with a note in the summary.
+- Docs corrected: `04_PROOF_OF_CONCEPT.md` §5b rewritten, `05_PAPER_PLAN.md`, learning
+  guide §3.6 and §6.
+- 47 tests pass (new: switch-policy test).
+
+**Findings (copied from the result files)**
+- **Rule + switch vs rule:** (a) loses when pupils are identical: −0.040 [−0.075, −0.007]
+  at T = 15 and −0.041 [−0.065, −0.013] at T = 30; (b) at σ = 1.0, +0.007 (T = 30) and
+  +0.023 (T = 60), n.s. **FAILED.** It does beat random help in 11/12 cells and fixed
+  worked examples in 12/12, but neither was a criterion.
+- **Replication (seed 20280101):**
+
+  | claim | result | verdict |
+  |---|---|---|
+  | rule − fixed | +0.139 to +0.191 in 12/12 cells | replicates |
+  | bandit − rule at σ = 1.0 | −0.011 (T = 30), +0.001 (T = 60), n.s. | **does not replicate** |
+  | random − rule at σ = 1.0 | −0.030 [−0.065, +0.005], −0.011, n.s. | **does not replicate** |
+  | choice − rule, ρ = 0.9 and σ ≥ 0.6 | +0.057 to +0.079 in 4/4 cells | replicates |
+  | choice − rule, ρ = −0.5 | worse in 4/4 cells | replicates |
+  | choice − rule, σ = 1.0 and ρ = 0.5 | +0.006, +0.018, n.s. | not robust |
+
+**Cause of the error (method lesson).** All 48 grid cells on one seed reuse the same
+simulated classes. The bandit's "8 winning cells" were one class draw, shown across 4 ρ
+values that the bandit ignores and 2 horizons. They were not 8 independent results.
+
+**Decisions**
+- `rule_switch` is **not** added to the app (pre-stated decision on failure).
+- Headline simulation claims now need a fresh-seed replication before they are reported.
+
+**Next**
+- Open the PR for the sensitivity-analysis work.
+- P2's remaining blockers: the adult dry run and the write-up.
+
+---
+
+## 2026-11-04 (evening): Simulation sensitivity analysis (for paper P2)
+
+> **Correction (see the "night" entry above):** the Q2 bandit gains at σ = 1.0 and the
+> exploratory "random help beats the rule" result did not replicate on a fresh seed and
+> are retracted. Q1, Q4 and the learner-choice pattern stand.
+
+**Plain-language summary.** We re-ran the simulated-pupil comparison under 48
+combinations of assumptions and 8 different "how pupils learn" tables, to see whether the
+earlier conclusions were just artefacts of our chosen numbers.
+- The fading rule's advantage held everywhere.
+- A deliberate check showed that the simulator *can* make the rule lose. It does when the
+  expertise-reversal effect is absent, so it isn't rigged.
+- The learning (bandit) tutor never really personalised. Where it looked better, random
+  help was equally good.
+- Letting pupils choose paid off only when pupils differ a lot *and* their stated
+  preferences track what helps them. The pilot must therefore measure both.
+
+**What**
+- `tutor/sensitivity.py`: the protocol (4 questions, grid, expected outcomes) written
+  before running. New seed 20271201; 20 classes × 25 pupils per cell; original adaptive
+  design D0.
+- `tutor/simulate.py`: `SimLearner` accepts an alternative learning table. The earlier
+  held-out results were re-checked and are unchanged.
+- Results: `tutor/results/sensitivity.{md,json,png}`.
+- Test: custom-table behaviour and determinism (46 tests pass).
+- Docs: `04_PROOF_OF_CONCEPT.md` §5b, `05_PAPER_PLAN.md` (P2 rows), learning guide §3.6.
+
+**Findings (copied from `tutor/results/sensitivity.md`)**
+- **Q1:** rule > always-worked-example in 48/48 cells.
+
+  | learning table | rule − fixed |
+  |---|---|
+  | default | +0.149 |
+  | weak reversal | +0.078 |
+  | 5 random perturbations | +0.113 to +0.251 |
+
+- **Q4, can-fail check:** with no expertise reversal, rule − fixed = −0.043
+  [−0.078, −0.012]. **Passed.**
+- **Q2, bandit − rule:**
+
+  | outcome | cells |
+  |---|---|
+  | better | 8 (all at σ = 1.0, T ≥ 30) |
+  | no difference | 28 |
+  | worse | 12 |
+
+  It picks the pupil's best help in 0.26–0.28 of cases (chance 0.25). The results are
+  identical across ρ, as expected, since the bandit does not use liking.
+- **Q3, choice − rule:**
+
+  | outcome | cells |
+  |---|---|
+  | better | 8 (σ = 1.0 with ρ ≥ 0.5; σ = 0.6 with ρ = 0.9 at T ≥ 30) |
+  | no difference | 18 |
+  | worse | 22 |
+
+  With ρ = −0.5 it is worse in 11 of 12 cells.
+- **Exploratory, added after seeing Q2:** at σ = 1.0, random − rule = +0.047
+  [+0.017, +0.076] (T = 30) and +0.056 [+0.028, +0.083] (T = 60); adaptive − random =
+  +0.013 and +0.004, both n.s. So the bandit's wins come from variety, not
+  personalisation.
+
+**Decisions**
+- No change to the app's defaults. `rule` stays the recommended tutor-chooses mode; the
+  bandit stays experimental.
+- Pilot analysis should estimate how much pupils differ in what helps them (σ-like
+  heterogeneity) as well as RQ3 (ρ). Both decide whether learner choice can pay off.
+
+**Next**
+- Hypothesis to test on a fresh seed: "rule + switch help type after a failure".
+- The P2 paper's remaining blockers are the adult dry run and the write-up.
+
+---
+
 ## 2026-11-04 (later): Learning guide
 
 **What:** `docs/06_LEARNING_GUIDE.md`, a guide for the project lead to learn the concepts
