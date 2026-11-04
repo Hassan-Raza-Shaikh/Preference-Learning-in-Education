@@ -21,6 +21,7 @@ wrong maths**, built and studied as both a practical system and a research progr
 
 | Document | For |
 |---|---|
+| [`docs/06_LEARNING_GUIDE.md`](docs/06_LEARNING_GUIDE.md) | **New to the project? Start here:** concepts explained simply, the story of what was done and why, code tour, hands-on exercises |
 | [`docs/01_VISION_AND_PLAN.md`](docs/01_VISION_AND_PLAN.md) | The idea, the reframing, milestones, publication plan |
 | [`docs/02_PHASE1_METHOD_CONDITIONED_SOLVING.md`](docs/02_PHASE1_METHOD_CONDITIONED_SOLVING.md) | Everything done in Phase 1, plus the status of each follow-up |
 | [`docs/03_MAC_RUNBOOK.md`](docs/03_MAC_RUNBOOK.md) | Track A steps that need the Apple Silicon machine |

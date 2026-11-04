@@ -10,6 +10,26 @@ Each entry records **what** was done, **why**, the **result** (including failure
 
 ---
 
+## 2026-11-04 (later): Learning guide
+
+**What:** `docs/06_LEARNING_GUIDE.md`, a guide for the project lead to learn the concepts
+and follow the work. It contains:
+- the big picture;
+- 15 concepts explained simply (verification, SFT/DPO, leakage, bootstrap CIs, dev vs
+  held-out seeds, BKT, Thompson sampling, expertise reversal, learning styles, study
+  design, privacy, can-fail checks, parameter recovery);
+- the story of the project in order;
+- a code tour of one tutor interaction;
+- 7 hands-on exercises;
+- research habits, a glossary and a reading list.
+
+**Findings:** every exercise snippet was run on 2026-11-04, and the expected outputs in the
+guide are copied from those runs. Code was not changed; 45 tests still pass.
+
+**Next:** unchanged.
+
+---
+
 ## 2026-11-04: Full review before merge; fixes; next steps that could be done here
 
 **Plain-language summary.** Before merging, we reviewed all the new code as if a school
