@@ -10,6 +10,29 @@ Each entry records **what** was done, **why**, the **result** (including failure
 
 ---
 
+## 2026-11-04 (late): Publication options document
+
+**What:** `docs/07_PUBLICATION_OPTIONS.md`, an overview of the papers this project can
+produce, for discussion with the supervisor:
+- **P1:** workshop paper, Phase 1;
+- **P2:** system / demo paper, the tutor;
+- **P3a / P3:** pilot short paper and full classroom study;
+- **D:** dataset release.
+
+For each it gives the pitch, what would be new, the evidence today, likely reviewer
+objections with honest answers, what's missing, effort, venues to consider, a recommended
+order, and questions for the supervisor. It also lists starting points for the
+related-work search. Linked from the README and `05_PAPER_PLAN.md`.
+
+**Findings:** none new (no code or experiments changed).
+
+**Decisions:** none. The doc lists the questions for the supervisor.
+
+**Next:** a related-work search per paper (novelty not yet established; venue deadlines not
+yet checked).
+
+---
+
 ## 2026-11-04 (night): "Rule + switch" test failed; replication corrects the sensitivity analysis
 
 **Plain-language summary.** We tested the idea from the sensitivity analysis (switch help

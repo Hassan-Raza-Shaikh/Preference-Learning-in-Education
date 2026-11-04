@@ -1,5 +1,8 @@
 # Paper plan: what each paper can claim, and what is missing
 
+*For the overview (pitches, reviewer objections, effort, order, questions for the
+supervisor), see [`07_PUBLICATION_OPTIONS.md`](07_PUBLICATION_OPTIONS.md).*
+
 *Created 2026-11-04. Extends [`01_VISION_AND_PLAN.md`](01_VISION_AND_PLAN.md) §6. Update the
 "Status" columns as items land, and log the changes in [`WORKLOG.md`](WORKLOG.md).*
 

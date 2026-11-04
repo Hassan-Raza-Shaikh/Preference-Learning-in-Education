@@ -26,7 +26,8 @@ wrong maths**, built and studied as both a practical system and a research progr
 | [`docs/02_PHASE1_METHOD_CONDITIONED_SOLVING.md`](docs/02_PHASE1_METHOD_CONDITIONED_SOLVING.md) | Everything done in Phase 1, plus the status of each follow-up |
 | [`docs/03_MAC_RUNBOOK.md`](docs/03_MAC_RUNBOOK.md) | Track A steps that need the Apple Silicon machine |
 | [`docs/04_PROOF_OF_CONCEPT.md`](docs/04_PROOF_OF_CONCEPT.md) | The tutor: what it does, correctness guarantees, simulation results |
-| [`docs/05_PAPER_PLAN.md`](docs/05_PAPER_PLAN.md) | Three papers: what each can claim now, what is missing, critical path |
+| [`docs/07_PUBLICATION_OPTIONS.md`](docs/07_PUBLICATION_OPTIONS.md) | Which papers are possible: pitch, strength, likely reviewer objections, effort, order, questions for the supervisor |
+| [`docs/05_PAPER_PLAN.md`](docs/05_PAPER_PLAN.md) | Evidence tracker for each paper's claims: what exists, what is missing |
 | [`docs/pilot/`](docs/pilot/) | School pilot: demo script, study design, consent templates, data plan, teacher guide |
 | [`docs/WORKLOG.md`](docs/WORKLOG.md) | Dated log of every step from Nov 2026 on |
 | [`RESULTS.md`](RESULTS.md), [`report_supervisor.pdf`](report_supervisor.pdf) | Phase 1 results and report |
