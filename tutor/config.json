@@ -1,0 +1,84 @@
+{
+  "class_id": "demo",
+  "skills": [
+    "substitution",
+    "elimination",
+    "graphing"
+  ],
+  "n_vars": [
+    2
+  ],
+  "mode": "learner_choice",
+  "fixed_arm": "example",
+  "allowed_arms": [
+    "example",
+    "faded",
+    "outline",
+    "none"
+  ],
+  "learner_can_pick_method": true,
+  "preference_weight": 0.3,
+  "class_prior_weight": 0.2,
+  "mastery_threshold": 0.95,
+  "bkt": {
+    "p_init": 0.1,
+    "p_transit": 0.1,
+    "p_slip": 0.1,
+    "p_guess": 0.1
+  },
+  "assessment": {
+    "pre": [
+      {
+        "problem_id": "a372017cramer17",
+        "method": "substitution"
+      },
+      {
+        "problem_id": "ab8b840systems13",
+        "method": "substitution"
+      },
+      {
+        "problem_id": "a372017cramer12",
+        "method": "elimination"
+      },
+      {
+        "problem_id": "a2a280bgaussian12",
+        "method": "elimination"
+      },
+      {
+        "problem_id": "a78ba6esubsitution10",
+        "method": "graphing"
+      },
+      {
+        "problem_id": "a1a538fsystems3",
+        "method": "graphing"
+      }
+    ],
+    "post": [
+      {
+        "problem_id": "a1a538fpairs11",
+        "method": "substitution"
+      },
+      {
+        "problem_id": "a78ba6esubsitution4",
+        "method": "substitution"
+      },
+      {
+        "problem_id": "ab8b840systems15",
+        "method": "elimination"
+      },
+      {
+        "problem_id": "a2a280bgaussian2",
+        "method": "elimination"
+      },
+      {
+        "problem_id": "a78ba6esubsitution5",
+        "method": "graphing"
+      },
+      {
+        "problem_id": "a78ba6esubsitution18",
+        "method": "graphing"
+      }
+    ],
+    "seed": 20261103
+  }
+}

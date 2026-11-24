@@ -1,0 +1,66 @@
+{
+  "structural": {
+    "substitution": {
+      "recall": 1.0,
+      "false_accept": 0.007,
+      "n_gold": 105
+    },
+    "elimination": {
+      "recall": 0.981,
+      "false_accept": 0.0,
+      "n_gold": 107
+    },
+    "graphing": {
+      "recall": 0.972,
+      "false_accept": 0.0,
+      "n_gold": 107
+    },
+    "cramers_rule": {
+      "recall": 1.0,
+      "false_accept": 0.0,
+      "n_gold": 164
+    },
+    "inverse_matrix": {
+      "recall": 1.0,
+      "false_accept": 0.0,
+      "n_gold": 164
+    },
+    "gaussian_elimination": {
+      "recall": 0.994,
+      "false_accept": 0.0,
+      "n_gold": 164
+    }
+  },
+  "keyword": {
+    "substitution": {
+      "recall": 1.0,
+      "false_accept": 0.4,
+      "n_gold": 105
+    },
+    "elimination": {
+      "recall": 1.0,
+      "false_accept": 0.201,
+      "n_gold": 107
+    },
+    "graphing": {
+      "recall": 1.0,
+      "false_accept": 0.0,
+      "n_gold": 107
+    },
+    "cramers_rule": {
+      "recall": 1.0,
+      "false_accept": 0.253,
+      "n_gold": 164
+    },
+    "inverse_matrix": {
+      "recall": 1.0,
+      "false_accept": 0.0,
+      "n_gold": 164
+    },
+    "gaussian_elimination": {
+      "recall": 1.0,
+      "false_accept": 0.0,
+      "n_gold": 164
+    }
+  }
+}

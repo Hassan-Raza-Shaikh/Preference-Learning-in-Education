@@ -22,7 +22,9 @@ import sys
 import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SCRATCH = "/private/tmp/claude-501/-Users-hassan-Projects-Preference-Learning-in-Education/b433c465-880e-4032-b765-630e3dc83987/scratchpad"
+# Fused models are large and live outside the repo. Override with PLE_SCRATCH=/path
+# (A8: was a hard-coded macOS session path).
+SCRATCH = os.environ.get("PLE_SCRATCH", os.path.join(ROOT, "..", "ple_scratch"))
 MODELS_DIR = os.path.join(SCRATCH, "models")
 EVAL_DIR = os.path.join(ROOT, "data", "train")
 GEN_MAX_TOKENS = "1280"

@@ -1,0 +1,8 @@
+# Core (data pipeline, tutor, tests). The tutor app itself needs only sympy.
+sympy==1.14.0
+numpy==2.5.3
+pytest==9.2.0
+# Figures (report, simulation plots)
+matplotlib==3.11.2
+# Training on Apple Silicon only (Phase 1 / Track A runbook), not needed for tests:
+#   mlx, mlx-lm, mlx-lm-lora

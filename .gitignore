@@ -8,3 +8,6 @@ data/**/*.jsonl
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Tutor runtime state and event logs (contain learner data; never commit)
+runs/
