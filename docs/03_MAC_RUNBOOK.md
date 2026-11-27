@@ -82,6 +82,19 @@ Save adapters periodically during SFT. The flag name varies by version; see
 best sympy accuracy. (`generate.py` currently reads the test systems; point `TEST_SYS` at a
 validation-systems file for this step and never select on test.)
 
+## 4b. A9: re-score without the leaked test items, then re-split
+
+First, cheaply re-score the existing generations without the 24 test items whose system
+also appears in training. Those problem IDs are listed in `data/train/split_leakage.json`
+(`test_problems_identical_to_train`). Filter them out of each `data/train/gen_*.jsonl` and
+re-run `experiments/evaluate.py` and `experiments/analyze_ci.py` on the rest.
+
+Then, for any new runs, use the leakage-free split:
+
+```bash
+python -m experiments.prepare_data --mm-dir data/multimethod_worked --out data/train_worked_dedup --group-by system
+```
+
 ## 5. Not here
 
 - **A7 (7B models):** needs a larger GPU.

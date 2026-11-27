@@ -53,7 +53,7 @@ data**?
 | Multi-method generator (terse) | `oatutor_extract/multimethod.py` | For each parseable system: solutions by substitution, elimination, graphing, Cramer's rule, matrix inverse, Gaussian elimination. sympy computes, then verifies by substituting back. Also builds DPO pairs. |
 | Worked generator | `oatutor_extract/worked.py` | The same, but every arithmetic step is shown explicitly |
 | Synthetic systems | `experiments/synth_systems.py` | Systems built from a known solution, run through the same verified generator; original and distribution-matched variants |
-| Data prep | `experiments/prepare_data.py`, `build_scaled.py` | Splits **by system** (no leakage), method-conditioned chat prompts, SFT/DPO files, contamination check |
+| Data prep | `experiments/prepare_data.py`, `build_scaled.py` | Splits by OATutor problem (**not** by distinct system; see §7 and A9), method-conditioned chat prompts, SFT/DPO files, synthetic-vs-test contamination check |
 | Training orchestration | `experiments/run_all.py` | Base → LoRA SFT → DPO for both models (MLX, `mlx-lm-lora`), resumable |
 | Generation | `experiments/generate.py` | Greedy decoding, same prompt and chat template for every condition |
 | Evaluation | `experiments/evaluate.py` | sympy grading: does the answer satisfy the *original* system exactly; keyword-based method-faithfulness; error modes |
@@ -125,6 +125,14 @@ numbers are in `data/train/ci_results.json`.
 
 ## 7. Integrity notes
 
+- **Split leakage, found 2026-11-27 during the paper review.** The split was made by OATutor
+  problem ID, not by distinct system, and OATutor reuses some systems across courses:
+  4 test problems (24 of 126 test items, 19%) have the same system as a training problem, and 1 more (3 items) matches a validation problem; the 26 test problems contain 25 distinct systems. Earlier versions of this record, `RESULTS.md` and the supervisor report wrongly
+  said "no leakage"; all are corrected. The effect cannot be measured without the per-item
+  generations, which are on the training machine. Memorisation can only inflate trained
+  models' scores, so "no fine-tuned model beat its base" is conservative; differences
+  between trained conditions could move either way. Fix for re-runs:
+  `prepare_data.py --group-by system` (track A9).
 - Every training target (real and synthetic) is independently re-verified: **0 failures**.
 - `sympy.nsimplify` was found to rewrite some rationals as strange prime-power products in
   *displayed* steps. It was replaced by an exact converter, with a step-level guard. An
@@ -146,6 +154,7 @@ numbers are in `data/train/ci_results.json`.
 | A5 | Synthetic data with clean (integer) intermediate arithmetic; vary the real:synthetic ratio | Untested hypotheses from §6 of RESULTS | **Clean-arithmetic version not supported, measured without training:** fraction-free intermediate steps in 38.7% of real train systems vs 39.8% of matched synthetic (and 55.6% of the original synthetic, which hurt more). `experiments/intermediate_stats.py`. Ratio experiment still open. |
 | A6 | Choose checkpoints by sympy validation accuracy, not loss | Loss was shown to mislead | needs MLX (runbook §4) |
 | A7 | Repeat at 7B when a GPU is available | Capacity question | needs GPU |
+| A9 | **Re-run Study 1 on a leakage-free split** (`prepare_data.py --group-by system`), or at least re-score the existing generations without the 24 leaked test items | Found 2026-11-27: 24 of 126 test items share a system with training | Audit and split option done (`experiments/check_split_leakage.py`); re-run needs MLX (runbook §4b) |
 | A8 | Remove the hard-coded macOS scratch paths in `experiments/run_all.py` and `collect_loss.py` (make them a CLI option / environment variable) | Reproducibility on other machines | **Done:** `PLE_SCRATCH` environment variable (default `../ple_scratch`) |
 
 Steps that need the Apple Silicon machine are collected in [`03_MAC_RUNBOOK.md`](03_MAC_RUNBOOK.md).

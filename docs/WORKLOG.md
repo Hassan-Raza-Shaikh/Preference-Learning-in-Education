@@ -10,6 +10,90 @@ Each entry records **what** was done, **why**, the **result** (including failure
 
 ---
 
+## 2026-11-27: Research paper drafted; review found a Phase 1 split flaw
+
+**Plain-language summary.** We checked whether a real paper is possible, searched the
+literature, and wrote one: *Keeping Correctness and Preference Apart in AI Mathematics
+Tutoring* (`paper/`).
+
+The literature search changed the framing. Most of our individual findings agree with
+earlier work, so the paper claims no "firsts". It brings the results together around one
+design idea and one testable question.
+
+A separate review of the draft found a real flaw in Phase 1: the train/test split was by
+OATutor problem, not by distinct system. So 24 of 126 test items were systems also seen in
+training. The paper and every document that claimed "no leakage" are corrected, and a
+leakage-free split is ready for re-running.
+
+**What**
+- **Environment.** A personal environment for this repository (approved by the user) allows
+  arXiv, Crossref and some journal hosts, so sources could be read. Its setup script installs
+  LaTeX; it is unproven until a fresh session starts on it.
+- **Literature search.** 20 web searches; every reference checked against Crossref or arXiv.
+  The log is in `paper/LITERATURE_LOG.md`.
+  - Abstracts read: Pardos & Bhandari (2023, 2024), Karich et al., Schmucker et al., Pal et
+    al., Pang et al., DPO, LoRA, Qwen, Russo et al., SymPy, Pashler et al.
+  - Blocked by bot challenges, so only bibliographic records and search summaries: Springer
+    (Salden, Doroudi, Mihalca) and PubMed Central.
+- **The paper:**
+  - `paper/main.tex`, compiled as `paper/Keeping_Correctness_and_Preference_Apart.pdf`
+    (17 pages);
+  - `paper/build_assets.py` generates every table, figure and number macro from committed
+    result files;
+  - `paper/check_overlap.py` is an originality check against the downloaded abstracts, with
+    a self-test that catches a planted copy.
+- **Review.** A separate in-project AI review (not an outside review) produced 25 findings,
+  all addressed. A further separate session then confirmed the fixes (see
+  `paper/REVIEW.md`).
+- **Split leakage.**
+  - `experiments/check_split_leakage.py` audits the split; its output is
+    `data/train/split_leakage.json`.
+  - `prepare_data.py --group-by system` produces a leakage-free split. The default still
+    reproduces the Phase 1 split byte for byte.
+  - New test `tests/test_track_a.py::test_system_grouped_split_never_crosses_and_audit_detects_crossing`.
+
+**Findings**
+- **Is a paper possible?** Yes, as an honest integrative paper. It is not a breakthrough
+  claim. Prior work that our results agree with:
+  - Pal et al. 2024 and Pang et al. 2024: the DPO failure on near-identical pairs;
+  - Schmucker et al. 2025: personalised bandits rarely beat population policies;
+  - Salden et al. 2010: adaptive fading of worked examples;
+  - Karich et al. 2014 (g = 0.05) and Mihalca et al. 2017: learner control and the role of
+    metacognitive accuracy.
+- **Not found in the sources that loaded:** fine-tuning LLMs to solve linear systems by a
+  requested method; a tutor that records "liked" and "worked" separately. This is not a
+  novelty claim.
+- **Split leakage (Phase 1).** 4 test problems (24 of 126 items, 19%) have the same system as
+  a training problem, and 1 more (3 items) matches a validation problem. The 26 test problems
+  contain 25 distinct systems.
+  - The effect is unmeasured, because per-item generations are on the Mac.
+  - Memorisation can only inflate trained scores, so "no fine-tuned model beat its base" is
+    conservative.
+  - Differences between trained conditions could move either way.
+- **Other review corrections**, among them:
+  - the abstract no longer says the rule wins "in every setting";
+  - the classroom study is "to be pre-registered", not "pre-registered";
+  - simulation pre-specification is labelled self-reported;
+  - claims about sources read only through summaries are kept general;
+  - the Phase 1 step check is described as post hoc, and its 14,112 unchecked matrix
+    displays are now reported;
+  - `build_assets.py` now counts step-check failures from the real field.
+- **Originality check.** The longest shared run with any downloaded abstract is 8 words: the
+  quoted, cited phrase from Schmucker et al.
+- **Tests:** 48 pass.
+
+**Decisions**
+- The Phase 1 numbers stay as recorded, and the flaw is disclosed. The Phase 1 split is kept
+  for reproducibility; new runs use `--group-by system`.
+- Before any submission: re-score without the leaked items and re-run on the clean split (A9),
+  and hand-label the faithfulness check (A2).
+
+**Next**
+- **Supervisor:** read the paper (`paper/README.md` lists what to know before showing it).
+- **On the Mac:** runbook §4b (re-score without the 24 leaked items), then §1–3.
+
+---
+
 ## 2026-11-04 (late): Publication options document
 
 **What:** `docs/07_PUBLICATION_OPTIONS.md`, an overview of the papers this project can

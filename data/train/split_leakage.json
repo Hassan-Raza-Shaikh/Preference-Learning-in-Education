@@ -1,0 +1,135 @@
+{
+  "distinct_systems": 128,
+  "problems": 164,
+  "test_problems": 26,
+  "test_items": 126,
+  "distinct_test_systems": 25,
+  "test_problems_identical_to_train": [
+    "a372017cramer11",
+    "a78ba6esubsitution12",
+    "a8cc02freal16",
+    "a8cc02freal26"
+  ],
+  "test_items_identical_to_train": 24,
+  "test_problems_identical_to_valid_only": [
+    "ac26263equations3"
+  ],
+  "test_items_identical_to_valid_only": 3,
+  "groups_crossing_splits": [
+    {
+      "problem_ids": [
+        "a1a538fsystems1",
+        "a1a538fsystems2"
+      ],
+      "splits": [
+        "train",
+        "valid"
+      ]
+    },
+    {
+      "problem_ids": [
+        "a1a538fsystems5",
+        "a1a538fsystems6"
+      ],
+      "splits": [
+        "train",
+        "valid"
+      ]
+    },
+    {
+      "problem_ids": [
+        "a372017cramer11",
+        "adb00fecramers15"
+      ],
+      "splits": [
+        "test",
+        "train"
+      ]
+    },
+    {
+      "problem_ids": [
+        "a78ba6esubsitution12",
+        "a9790f0System3"
+      ],
+      "splits": [
+        "test",
+        "train"
+      ]
+    },
+    {
+      "problem_ids": [
+        "a8cc02freal16",
+        "a8cc02freal17"
+      ],
+      "splits": [
+        "test",
+        "train"
+      ]
+    },
+    {
+      "problem_ids": [
+        "a8cc02freal22",
+        "a8cc02freal23",
+        "ab8b840systems5"
+      ],
+      "splits": [
+        "train",
+        "train",
+        "valid"
+      ]
+    },
+    {
+      "problem_ids": [
+        "a8cc02freal26",
+        "a8cc02freal27",
+        "ab8b840systems6"
+      ],
+      "splits": [
+        "test",
+        "valid",
+        "train"
+      ]
+    },
+    {
+      "problem_ids": [
+        "a8cc02freal5",
+        "ab8b840systems2"
+      ],
+      "splits": [
+        "train",
+        "valid"
+      ]
+    },
+    {
+      "problem_ids": [
+        "ab8934ethreevar9",
+        "ae39497systems20"
+      ],
+      "splits": [
+        "valid",
+        "train"
+      ]
+    },
+    {
+      "problem_ids": [
+        "ac26263equations1",
+        "ac26263equations2"
+      ],
+      "splits": [
+        "valid",
+        "train"
+      ]
+    },
+    {
+      "problem_ids": [
+        "ac26263equations3",
+        "ac26263equations4"
+      ],
+      "splits": [
+        "test",
+        "valid"
+      ]
+    }
+  ],
+  "group_by": "problem_id"
+}

@@ -44,7 +44,7 @@ range of Thompson (1933), which Crossref gives only as "285", so `refs.bib` omit
 | Pardos & Bhandari 2024 (PLOS ONE) | **abstract** (Crossref abstract field) | 32% of problems failed quality checks; self-consistency reduces this to nearly 0% for algebra; N = 274 |
 | Pardos & Bhandari 2023 (arXiv) | **abstract** | 70% of ChatGPT hints passed manual quality checks |
 | Karich, Burns & Maki 2014 | **abstract** (Crossref) | overall learner-control effect "almost zero (g = 0.05)" |
-| Schmucker et al. 2025 | **abstract** (arXiv) | personalised (contextual-bandit) policies often no better than well-optimised population policies |
+| Schmucker et al. 2025 | **abstract** (arXiv) | feedback after incorrect answers; 43,000 assistance actions assessed; effect sizes "may often be too small" for contextual-bandit policies to improve significantly on well-optimised population (MAB) policies |
 | Pal et al. 2024 | **abstract** (arXiv) | DPO can reduce the likelihood of preferred responses, especially when pairs have low edit distance |
 | Pang et al. 2024 | **abstract** (arXiv) | an added NLL term was "crucial" for DPO on reasoning |
 | Rafailov et al. 2023; Hu et al. 2021; Yang et al. 2024; Qwen Team 2024 | **abstract** | method and model descriptions only |
@@ -57,6 +57,7 @@ range of Thompson (1933), which Crossref gives only as "285", so `refs.bib` omit
 | Kirschner & van Merriënboer 2013 | **bibliographic record + repository page (no abstract) + search summaries** | "learners know best" legends (general description only) |
 | Kalyuga et al. 2003; Renkl & Atkinson 2003 | **bibliographic record only** | the expertise-reversal effect and fading (textbook-level background) |
 | Corbett & Anderson 1995 | **bibliographic record only** | the BKT model (standard background) |
+| Thompson 1933 | **bibliographic record only** | origin of Thompson sampling (standard background) |
 | Pardos et al. 2023 (OATutor) | **bibliographic record + search summaries + the OATutor content repository itself** | the data source |
 
 ## 3. What could not be searched or opened

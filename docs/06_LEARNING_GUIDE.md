@@ -98,10 +98,17 @@ difference was the turning point of the project (§3.2).
 
 ### 2.5 Train / validation / test, and leakage
 You train on one set, tune on another (validation), and report on a third you never
-touched (test). The splits here are **by system**: all method-solutions of one system go
-to the same split. Otherwise the model could see `x = 3, y = 1` for a system during
-training (by substitution) and be "tested" on the same system (by elimination). That
-would be **leakage**, which makes results look better than they are.
+touched (test). All method-solutions of one problem go to the same split. Otherwise the
+model could see `x = 3, y = 1` for a system during training (by substitution) and be
+"tested" on the same system (by elimination). That would be **leakage**, which makes
+results look better than they are.
+
+**A real example from this project.** Phase 1 split by OATutor *problem*, but OATutor reuses
+some systems across courses. So 4 test problems (24 of 126 test items) turned out to be the
+same systems as training problems. Nobody noticed until a review of the paper checked the
+split against the data (`experiments/check_split_leakage.py`). Lesson: check for duplicate
+items before you split, and group by the thing that must not repeat, here the system
+itself (`prepare_data.py --group-by system`).
 
 ### 2.6 Confidence intervals and the bootstrap
 A result like "accuracy 0.389" is one number from 126 test items. The **95% confidence

@@ -57,7 +57,8 @@ every model worse, and we test whether that was caused by how the pairs were bui
 | Objection | Answer |
 |---|---|
 | "Only 1.5B models, 4-bit, on a laptop." | True. It's a limitation; frame the paper as a careful small-scale study. A 7B replication (A7) would strengthen it. |
-| "26 test systems is tiny." | The CIs are reported (about ±0.1). Parser v2 could add test systems, but that changes the split, so decide before new runs. |
+| "26 test systems is tiny." | The CIs are reported (up to about ±0.13). Parser v2 could add test systems, but that changes the split, so decide before new runs. |
+| "Is the test set clean?" | Not fully: 24 of 126 test items share a system with a training problem (found 2026-11-27). The draft paper discloses this; re-score and re-split before submission (A9). |
 | "One seed per condition." | Fix before submission: runbook §3. |
 | "DPO hurting is already known." | Possibly; check the likelihood-displacement literature (§7). Our contribution would be the controlled cause test (on-policy vs offline pairs), not the observation alone. |
 | "Is the faithfulness metric valid?" | Only on our gold solutions so far. Hand-labelled agreement on real outputs is needed (runbook §1). |

@@ -28,7 +28,7 @@ Check deadlines when ready.
 | Result 3 | **Why** DPO hurts: pair construction vs update strength | Diagnostics: pairs separable by a surface rule in 100% of cases | The on-policy DPO 2×2 (A1 part 2) | needs Mac; **this is the paper's most interesting part** |
 | Result 4 | Synthetic data did not help, even when matched; validation loss misleads | `RESULTS.md` §6; clean-arithmetic hypothesis ruled out (A5) | Real:synthetic ratio sweep (optional) | mostly ready |
 | Metric | Keyword method-faithfulness is unreliable (up to 40% false accepts); a structural check is proposed | `data/train_worked/faithfulness_validation.json` | Agreement with hand labels on real outputs (A2, runbook §1) | needs Mac + ~2 h labelling |
-| Limits | 1.5B / 4-bit, 26 test systems | | Parser v2 could add test systems, but that changes the split, so decide before re-running | decision |
+| Limits | 1.5B / 4-bit, 26 test problems (25 distinct systems); **24 of 126 test items share a system with training** (found 2026-11-27) | `data/train/split_leakage.json` | Re-score without leaked items, then re-run on a split grouped by system (A9); parser v2 could add test systems at the same time | **must fix before submission** |
 
 **Critical path:** runbook §1 (labels), then §2 (on-policy DPO), then §3 (seeds). Then
 write. Estimated 2–3 weeks of Mac time plus writing.

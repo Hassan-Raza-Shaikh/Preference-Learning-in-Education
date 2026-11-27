@@ -22,8 +22,13 @@ so no hallucinated math enters the pipeline.
   - **terse** — compact steps (the original generator).
   - **worked** — the same steps but showing the arithmetic explicitly
     (e.g. substitution renders `3(3y) − 4y = 5 → 5y = 5`, not a compressed jump).
-- **Split.** 164 systems → 114 train / 24 valid / **26 test**, grouped by system
-  (no leakage), identical across all conditions. Test = 126 method-solutions.
+- **Split.** 164 problems → 114 train / 24 valid / **26 test**, identical across all
+  conditions. Test = 126 method-solutions. *Correction (2026-11-27):* this was originally
+  described as "grouped by system (no leakage)". It was split by OATutor problem ID, and
+  OATutor reuses some systems: 4 test problems (24 of 126 test items, 19%) have the same system as a training problem, and 1 more (3 items) matches a validation problem; the 26 test problems contain 25 distinct systems. Audit: `experiments/check_split_leakage.py` →
+  `data/train/split_leakage.json`. The effect on accuracy is not yet measured; memorisation
+  can only inflate trained models' scores, so "no fine-tuned model beat its base" is
+  conservative, while differences between trained conditions could move either way.
 - **Models (matched 1.5B, 4-bit, MLX).**
   - `general` = Qwen2.5-1.5B-Instruct
   - `math` = Qwen2.5-Math-1.5B-Instruct

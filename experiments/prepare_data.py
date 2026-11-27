@@ -44,6 +44,40 @@ def system_block_from_prompt(sft_prompt):
     return sft_prompt.split("\n", 1)[1].strip() if "\n" in sft_prompt else sft_prompt
 
 
+def system_signature(rec):
+    """Identity of a system: its normalised equations (same system => same signature)."""
+    return tuple(e.replace(" ", "") for e in rec["system"]["equations_tex"])
+
+
+def split_assignments(systems, group_by="problem_id", seed=SEED, ratio=SPLIT):
+    """Map problem_id -> 'train'/'valid'/'test'.
+
+    group_by="problem_id" reproduces the Phase 1 split EXACTLY. Note: it splits by OATutor
+    problem, and OATutor reuses some systems across courses, so identical systems can land
+    in different splits (audit: experiments/check_split_leakage.py). group_by="system"
+    groups problems with identical equations so that no system crosses splits (use this for
+    any new experiment).
+    """
+    if group_by == "problem_id":
+        groups = [[sid] for sid in sorted(systems)]
+    elif group_by == "system":
+        by_sig = defaultdict(list)
+        for sid in sorted(systems):
+            by_sig[system_signature(systems[sid])].append(sid)
+        groups = sorted(by_sig.values())
+    else:
+        raise ValueError(group_by)
+    rng = random.Random(seed)
+    rng.shuffle(groups)
+    n = len(groups)
+    n_tr, n_va = int(n * ratio[0]), int(n * ratio[1])
+    split_of = {}
+    for i, g in enumerate(groups):
+        for sid in g:
+            split_of[sid] = "train" if i < n_tr else ("valid" if i < n_tr + n_va else "test")
+    return split_of
+
+
 def main():
     import argparse
     ap = argparse.ArgumentParser()
@@ -51,6 +85,9 @@ def main():
                     help="directory with sft_multimethod.jsonl / preference_pairs.jsonl / systems_multimethod.jsonl")
     ap.add_argument("--out", default=os.path.join(ROOT, "data", "train"),
                     help="output directory for splits")
+    ap.add_argument("--group-by", choices=["problem_id", "system"], default="problem_id",
+                    help="problem_id = the Phase 1 split (has cross-split duplicate systems); "
+                         "system = leakage-free grouping for new experiments")
     args = ap.parse_args()
     MM, OUT = args.mm_dir, args.out
 
@@ -60,16 +97,12 @@ def main():
     systems = {json.loads(l)["source"]["problem_id"]: json.loads(l)
                for l in open(os.path.join(MM, "systems_multimethod.jsonl"), encoding="utf-8")}
 
-    # ---- system-grouped split ----
+    # ---- split (see split_assignments for the Phase 1 caveat) ----
+    split_of = split_assignments(systems, args.group_by)
     sys_ids = sorted(systems.keys())
-    rng = random.Random(SEED)
-    rng.shuffle(sys_ids)
-    n = len(sys_ids)
-    n_tr = int(n * SPLIT[0])
-    n_va = int(n * SPLIT[1])
-    split_of = {}
-    for i, sid in enumerate(sys_ids):
-        split_of[sid] = "train" if i < n_tr else ("valid" if i < n_tr + n_va else "test")
+    if args.group_by == "problem_id":                 # keep the Phase 1 manifest order exactly
+        sys_ids = sorted(systems.keys())
+        random.Random(SEED).shuffle(sys_ids)
 
     def bucket(items, keyfn):
         out = defaultdict(list)
@@ -122,7 +155,7 @@ def main():
             }, ensure_ascii=False) + "\n")
 
     manifest = {
-        "seed": SEED, "split_ratio": SPLIT,
+        "seed": SEED, "split_ratio": SPLIT, **({"group_by": args.group_by} if args.group_by != "problem_id" else {}),
         "systems": {"train": sum(v == "train" for v in split_of.values()),
                     "valid": sum(v == "valid" for v in split_of.values()),
                     "test": sum(v == "test" for v in split_of.values())},

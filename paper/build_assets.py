@@ -50,12 +50,19 @@ bank = load("tutor/data/problem_bank.json")["manifest"]
 macros.update(BankProblems=bank["problems"], BankTwoVar=bank["by_n_vars"]["2"], BankThreeVar=bank["by_n_vars"]["3"],
               BankStepChecked=f"{bank['stats']['step_eq_checked']:,}", BankStepUnchecked=f"{bank['stats']['step_eq_unchecked']:,}",
               BankStepFailures=len(bank["step_check_failures"]))
-total_checked = total_fail = 0
+total_checked = total_unchecked = total_fail = 0
 for name in ("multimethod", "multimethod_worked", "multimethod_worked_synth", "multimethod_worked_synth_matched"):
     sc = load(f"data/{name}/step_check.json")
     total_checked += sc["equations_checked"]
-    total_fail += sc.get("solutions_with_failure", 0)
-macros.update(PhaseOneStepChecked=f"{total_checked:,}", PhaseOneStepFailures=total_fail)
+    total_unchecked += sc["equations_unchecked"]
+    total_fail += len(sc["failures"])          # the list of failing solutions (empty when all pass)
+macros.update(PhaseOneStepChecked=f"{total_checked:,}", PhaseOneStepUnchecked=f"{total_unchecked:,}",
+              PhaseOneStepFailures=total_fail)
+lk = load("data/train/split_leakage.json")      # experiments/check_split_leakage.py
+macros.update(LeakTestProblems=len(lk["test_problems_identical_to_train"]), LeakTestItems=lk["test_items_identical_to_train"],
+              LeakValidProblems=len(lk["test_problems_identical_to_valid_only"]),
+              LeakValidItems=lk["test_items_identical_to_valid_only"], DistinctTestSystems=lk["distinct_test_systems"],
+              LeakTestShare=f"{100 * lk['test_items_identical_to_train'] / lk['test_items']:.0f}")
 mm = load("data/multimethod_worked/manifest.json")
 macros.update(SystemsEmitted=mm["counts"]["systems_emitted"], MethodSolutions=mm["counts"]["sft_method_examples"],
               SkipUnparsed=mm["skips"]["skip_unparsed"], SkipNoUnique=mm["skips"]["skip_no_unique_solution"])

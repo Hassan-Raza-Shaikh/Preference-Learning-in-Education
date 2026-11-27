@@ -55,8 +55,10 @@ added synthetic data?
 
 ## 3. Experimental setup
 
-- **Split by system:** 164 $\to$ 114 train / 24 valid / **26 test** (126 method-solutions),
-  no leakage; the identical test set is used in every condition.
+- **Split:** 164 $\to$ 114 train / 24 valid / **26 test** problems (126 method-solutions);
+  the identical test set is used in every condition. *Correction (2026-11-27): this report
+  originally said "split by system, no leakage". The split was by OATutor problem, and
+  4 test problems (24 of 126 test items, 19\\%) have the same system as a training problem, and 1 more (3 items) matches a validation problem; the 26 test problems contain 25 distinct systems. See `RESULTS.md` and `data/train/split\_leakage.json`.*
 - **Matched base models (4-bit, MLX, Apple Silicon):** `Qwen2.5-1.5B-Instruct` (general)
   and `Qwen2.5-Math-1.5B-Instruct` (math). LoRA (8 layers) via `mlx-lm-lora`.
 - **Conditions:** SFT at 600 iterations (terse, worked), DPO on top of SFT ($\beta=0.1$),

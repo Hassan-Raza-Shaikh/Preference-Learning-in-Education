@@ -84,3 +84,19 @@ def test_parse_v2_formats():
     assert how == "augmented_matrix" and len(eqs) == 3
     assert from_augmented("0 & 0 & 0 \\\\ 1 & 1 & 2") == []          # degenerate row rejected
     assert extract_system_v2("Find the determinant of $$\\begin{bmatrix}1 & 2\\\\3 & 4\\end{bmatrix}$$")[1] == "unparsed"
+
+
+# ------------------------------------------------------------------ split leakage
+def _rec(eqs, n_methods=2):
+    return {"system": {"equations_tex": eqs}, "methods": [{}] * n_methods}
+
+
+def test_system_grouped_split_never_crosses_and_audit_detects_crossing():
+    from experiments.check_split_leakage import audit
+    from experiments.prepare_data import split_assignments
+    systems = {f"p{i}": _rec([f"x+{i % 7}y=1", "x-y=2"]) for i in range(40)}    # 7 distinct systems, reused
+    by_sys = split_assignments(systems, "system", seed=3)
+    a = audit(systems, by_sys)
+    assert a["groups_crossing_splits"] == [] and a["test_items_identical_to_train"] == 0
+    by_pid = split_assignments(systems, "problem_id", seed=3)                  # CAN-FAIL: reused systems leak
+    assert audit(systems, by_pid)["groups_crossing_splits"]
