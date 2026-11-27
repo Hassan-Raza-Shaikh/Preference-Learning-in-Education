@@ -78,8 +78,11 @@ range of Thompson (1933), which Crossref gives only as "285", so `refs.bib` omit
     with the failure mode described by Pal et al. 2024 and with Pang et al. 2024.
   - **Personalised bandits failing to beat population policies** agrees with the
     large-scale, real-student evidence of Schmucker et al. 2025.
-  - **Mastery-based fading beating fixed worked examples** re-finds, in simulation, the
-    direction reported for real students by Salden et al. 2010.
+  - **Mastery-based fading beating fixed worked examples** is motivated by the
+    expertise-reversal and worked-example literature (Kalyuga et al. 2003; Renkl & Atkinson
+    2003; Salden et al. 2010). Those sources were read at bibliographic or summary level
+    only, so the paper does not claim agreement with a specific result. Its baseline (never
+    fading) also differs from adaptive versus fixed fading.
   - **Learner choice depending on whether preferences track what helps** is a formal
     version of the moderator reported by Mihalca et al. 2017, and fits the near-zero
     average effect in Karich et al. 2014.

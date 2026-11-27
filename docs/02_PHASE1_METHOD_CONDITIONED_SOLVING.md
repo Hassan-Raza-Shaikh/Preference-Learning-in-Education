@@ -67,7 +67,7 @@ data**?
   (560 unparsed, mostly word problems or figure-based; 27 without a unique solution)
 - → **811** verified method-solutions (substitution 105, elimination 107, graphing 107,
   Cramer's 164, inverse 164, Gaussian 164) and **811** preference pairs
-- Split by system (seed 20260909): **114 train / 24 valid / 26 test** (126 test items)
+- Split by OATutor problem (seed 20260909): **114 train / 24 valid / 26 test** (126 test items); 24 test items share a system with training (§7)
 - Synthetic: 5,624 examples per synthetic set (original; distribution-matched), 0 verification failures
 
 ### Training setup

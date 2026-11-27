@@ -1,4 +1,5 @@
-"""Pre-registered test of the 'rule + switch' policy (hypothesis from the sensitivity analysis).
+"""Test of the 'rule + switch' policy against criteria fixed before running (self-reported,
+not externally registered; hypothesis from the sensitivity analysis).
 
 Background (tutor/results/sensitivity.md): the mastery rule gives every pupil in a mastery
 band the same help. When pupils differ a lot (sigma = 1.0), even RANDOM help beat it,
@@ -74,7 +75,7 @@ def run():
 def to_markdown(res):
     c = res["criteria"]
     f = lambda x: f"{x['diff']:+.3f} [{x['ci'][0]:+.3f}, {x['ci'][1]:+.3f}] {x['sig']}"
-    L = ["# Pre-registered test: 'rule + switch' vs the mastery rule\n",
+    L = ["# Test against criteria fixed before running (self-reported): 'rule + switch' vs the mastery rule\n",
          f"Seed {SEED} (fresh), {N_CLASSES} classes x 25 simulated pupils per cell. `+`/`-` = 95% CI excludes 0. "
          "Protocol and success criteria: docstring of `tutor/switch_rule.py`. "
          "**Simulated pupils: this tests the mechanism, not real learning.**\n",

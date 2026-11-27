@@ -1,4 +1,4 @@
-# Pre-registered test: 'rule + switch' vs the mastery rule
+# Test against criteria fixed before running (self-reported): 'rule + switch' vs the mastery rule
 
 Seed 20280101 (fresh), 20 classes x 25 simulated pupils per cell. `+`/`-` = 95% CI excludes 0. Protocol and success criteria: docstring of `tutor/switch_rule.py`. **Simulated pupils: this tests the mechanism, not real learning.**
 

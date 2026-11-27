@@ -60,14 +60,14 @@ against the true solution (\numBankStepChecked{} equations in the problem bank a
 displays are not parsed). The tutor keeps two learner signals
 apart: what the learner \emph{liked} and what \emph{worked}.
 
-\textbf{(3)} In a simulation study specified in code before running, with sensitivity
+\textbf{(3)} In a simulation study specified in code before running (self-reported), with sensitivity
 analysis and replication on a fresh random seed, a mastery-based fading rule beat fixed
 worked examples whenever the simulated learners showed an expertise-reversal effect, and
 lost to them when they did not. A per-learner Thompson-sampling bandit never reliably beat the rule.
 Letting learners choose their help beat the rule only when learners differed substantially
 in what helped them \emph{and} their preferences tracked it strongly. Two apparent findings
 from a single-seed grid failed to replicate and are retracted, and a policy variant tested
-against criteria fixed in advance failed them.
+against criteria fixed in advance (self-reported) failed them.
 
 Most of these results agree with earlier empirical work. Our contribution is to bring them
 together into a design and a testable research question: do learners' preferences predict
@@ -140,11 +140,10 @@ preference predicts learning, rather than assume it.}
   \item \textbf{A tutor design and implementation that records ``liked'' and ``worked''
         separately}, with study tooling (randomisation, counterbalanced quizzes,
         privacy-by-design logging) (Section~\ref{sec:system}).
-  \item \textbf{A simulation analysis, specified in code before running, with sensitivity and
-        replication}
-        (Section~\ref{sec:study2}). Its main results are in line with real-student work on
-        fading worked examples \citep{salden2010expertise} and on population-level versus
-        personalised bandit policies \citep{schmucker2025learning}. It adds a map of the
+  \item \textbf{A simulation analysis, specified in code before running (self-reported), with
+        sensitivity and replication}
+        (Section~\ref{sec:study2}). Its bandit result is in line with real-student work on
+        population-level versus personalised policies \citep{schmucker2025learning}. It adds a map of the
         conditions under which learner choice can pay off. The simulator's parameters are
         invented, so these results show how the mechanism behaves, not whether children
         learn more.
@@ -285,7 +284,7 @@ framework. SFT ran for 600 iterations (learning rate $10^{-4}$, batch size 2). D
 the SFT model. Each DPO pair is the verified-correct solution against a deterministically
 corrupted, verified-wrong one, with the solving steps removed. The corruption is the first
 of a sign flip, swapped values or an off-by-one error that fails verification; in practice
-769 of the 811 generated pairs (95\%) use the sign flip. The compute-matched and synthetic-data conditions used 1500 SFT iterations.
+529 of the 565 training pairs (94\%) use the sign flip. The compute-matched and synthetic-data conditions used 1500 SFT iterations.
 The synthetic data had 5,624 additional examples, either from randomly generated systems or
 from systems whose statistics were matched to the training split.
 
@@ -315,7 +314,7 @@ in either direction. A leakage-free split by system is now available
 \begin{table}[t]
 \centering\small
 \caption{Study~1: exact answer accuracy on the \numTestItems{} held-out test items (general model: Qwen2.5-1.5B-Instruct; math model: Qwen2.5-Math-1.5B-Instruct), with
-95\% cluster-bootstrap CIs over the \numSplitTest{} test systems. Source:
+95\% cluster-bootstrap CIs over the \numSplitTest{} test problems. Source:
 \texttt{data/train/ci\_results.json}.}
 \label{tab:study1}
 \begin{tabular}{lcccc}
@@ -364,8 +363,8 @@ results.
         $15-18y=0$ where $5y=5$ was correct.
   \item \textbf{DPO hurt in every condition.} All four DPO$-$SFT contrasts are negative and
         exclude zero. The largest drop is the math model with worked targets
-        (\numDpoWorkedDiffMath{}). The general model with worked targets fell furthest in
-        absolute terms, to \numWorkedDPOGen{} accuracy (\numDpoWorkedDiffGen{}).
+        (\numDpoWorkedDiffMath{}). The general model with worked targets reached the
+        lowest accuracy, \numWorkedDPOGen{} (\numDpoWorkedDiffGen{}).
   \item \textbf{No fine-tuned model clearly beat its base.} The best general SFT model is
         below its base (\numBestMinusBaseGen{}, CI \numBestMinusBaseCIGen{}). The math model
         at 1500 iterations only reaches parity (\numBestMinusBaseMath{}, CI
@@ -461,7 +460,7 @@ most to least support:
 \begin{itemize}
   \item a fully worked solution of a \emph{different} but similar system (an example-problem
         pair), so the target's answer is never revealed before the pupil answers;
-  \item a \emph{faded} solution of the target: at most the first half of its steps, cut
+  \item a \emph{faded} solution of the target: at most half of its steps (rounded up), cut
         before any step that would state a final value;
   \item an \emph{outline} of the method, with no numbers;
   \item \emph{no help}.
@@ -615,9 +614,11 @@ If worked examples are best at \emph{every} level (no expertise reversal), the m
 should lose to always showing worked examples. At that setting it does: \numNoRevDiff{},
 CI \numNoRevCI{}. So
 the simulator does not guarantee that the rule wins. The rule's advantage rests on expertise
-reversal being real. With reversal present, the rule beat fixed worked examples in all
-\numQOneBetter{} grid cells, in the weak-reversal table (\numWeakRevDiff{}), and in all five
-perturbed tables (\numPertLo{} to \numPertHi{}).
+reversal being real. Where lighter help suits partial learners better, the rule beat fixed
+worked examples in all \numQOneBetter{} grid cells, in the weak-reversal table
+(\numWeakRevDiff{}), and in all five randomly perturbed tables (\numPertLo{} to
+\numPertHi{}). In two of the perturbed tables, faded help rather than a worked example is
+best even for novices.
 
 \paragraph{Learner choice.}
 Figure~\ref{fig:sens} shows learner choice minus the rule for $T = 30$ and 60. Over all
@@ -724,8 +725,8 @@ Most individual results here agree with prior work:
 \begin{itemize}
   \item the DPO failure, with \citet{pal2024smaug} and \citet{pang2024iterative};
   \item the bandit result, with real-student evidence from \citet{schmucker2025learning};
-  \item fading support by mastery, with the worked-example literature
-        \citep{renkl2003structuring,salden2010expertise};
+  \item fading support by mastery, which the expertise-reversal and worked-example
+        literature motivates \citep{kalyuga2003expertise,renkl2003structuring,salden2010expertise};
   \item the conditional value of learner choice, with \citet{mihalca2017accuracy} and the
         near-zero average effect in \citet{karich2014updated}.
 \end{itemize}
@@ -747,7 +748,7 @@ searched, so we make no priority claim.
 A grid of simulation results computed from one random seed shows one draw of simulated
 classes many times. Two of our grid findings (the bandit's gains and the benefit of
 variety) vanished with new classes, and a policy built on one of them failed criteria
-fixed before it was run. Simulation-based claims in education are cheap to produce in large
+fixed before it was run (self-reported). Simulation-based claims in education are cheap to produce in large
 numbers. We suggest they should routinely be replicated with independent draws, and
 include a check that is able to fail, before they inform design.
 
@@ -758,7 +759,7 @@ include a check that is able to fail, before they inform design.
       \item small (1.5B, 4-bit) models;
       \item one training run per condition;
       \item only 26 test problems (\numDistinctTestSystems{} distinct systems), so
-            intervals are wide, up to about $\pm 0.13$;
+            intervals are wide, up to about $\pm 0.14$;
       \item \numLeakTestItems{} of \numTestItems{} test items share a system with a training
             problem (Section~\ref{sec:study1});
       \item one topic;

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Confidence intervals for every condition and every key contrast.
 
-Items are not independent: the 126 test items are 26 systems x their methods. So we
-use a cluster bootstrap that resamples SYSTEMS (with replacement), and for contrasts a
-PAIRED version (the same resampled systems for both conditions). Correctness uses the
+Items are not independent: the 126 test items are 26 test problems x their methods. So we
+use a cluster bootstrap that resamples test PROBLEMS (26 problems, 25 distinct systems; see
+data/train/split_leakage.json) with replacement, and for contrasts a
+PAIRED version (the same resampled problems for both conditions). Correctness uses the
 exact same rule as evaluate.score(): parsed answer satisfies the system exactly.
 
 Writes data/train/ci_results.json and prints a markdown table.

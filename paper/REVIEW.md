@@ -36,7 +36,33 @@ The drafting session checked the two highest-stakes findings itself before actin
 | 17 | should-fix | Power-analysis caveat; "medium" for d = 0.4 | Caveat restored; wording corrected |
 | 18–25 | minor | Plural seeds; band boundary; policy details; figure vs counts; missing method details; CI width; Kirschner and "active harm" wording; interpretation of the choice gain | All addressed |
 
-## Round 2: confirmation of fixes
+## Round 2: confirmation of fixes (2026-11-27)
 
-*Pending:* a separate session is checking each correction and looking for errors the fixes
-introduced. Its result will be recorded here.
+A second, separate session checked each Round 1 correction against the repository, at
+commit `b0f5752`.
+
+**Result.** 17 findings were confirmed fixed. Six were only partly fixed:
+- #1: a table caption still said "26 test systems";
+- #5: "self-reported" was missing in the abstract, contributions and discussion;
+- #6: a new wording error, "fell furthest in absolute terms";
+- #8: a residual Salden result claim, in the contributions, discussion and literature log;
+- #20: the faded-help cap is "half, rounded up";
+- #23: the CI width is about ±0.14.
+
+It also found leftover "pre-registered" wording in `tutor/switch_rule.py`,
+`tutor/results/switch_rule.md`, `docs/04`, `docs/05` and the `analyze_ci.py` docstring. It
+noted that two of the five perturbed tables do not make worked examples best for novices,
+and that the DPO training pairs use sign flips in 529 of 565 cases (94%).
+
+**Action.** The drafting session re-checked the two factual points itself and confirmed
+both: `tutor.sensitivity.perturbed_tables()`, and the training-pair counts in
+`preference_pairs.jsonl`. It then fixed every item above.
+
+**Not done:** the Round 2 fixes were not read by a third separate session. They are small
+wording corrections, listed in the commit that follows this file's update.
+
+**Checks after Round 2:**
+- the paper builds with no unresolved references (17 pages);
+- the originality check gives a longest shared run of 8 words, the quoted and cited phrase
+  from Schmucker et al.;
+- 48 tests pass.

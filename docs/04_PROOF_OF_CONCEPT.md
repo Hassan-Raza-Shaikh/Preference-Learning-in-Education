@@ -190,7 +190,7 @@ personalisation". On the fresh seed, random help did **not** beat the rule (−0
 [−0.065, +0.005] and −0.011, n.s.). That result is retracted: it was added after seeing
 the data and was a property of one set of simulated classes.
 
-**Pre-registered test of "rule + switch"** (`tutor/switch_rule.py`, seed 20280101).
+**Test of "rule + switch" against criteria fixed before running** (self-reported; `tutor/switch_rule.py`, seed 20280101).
 - **Policy:** after each wrong answer, move to the next-nearest help type.
 - **Hypothesis:** it would keep the rule's strength when pupils are similar and gain
   variety when they differ.
